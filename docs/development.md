@@ -45,7 +45,7 @@ Front Desk A2AサービスとADK Webは同じAgent定義をそれぞれ独立し
 | 2 | Housekeeping Agent | `uv run uvicorn agents.housekeeping_agent.agent:a2a_app --host 127.0.0.1 --port 8002` | 8002 |
 | 3 | Restaurant Agent | `uv run uvicorn agents.restaurant_agent.agent:a2a_app --host 127.0.0.1 --port 8003` | 8003 |
 | 4 | Front Desk A2Aサービス | `uv run uvicorn agents.front_desk_agent.agent:a2a_app --host 127.0.0.1 --port 8004` | 8004 |
-| 5 | ADK Web | `uv run adk web agents/front_desk_agent --host 127.0.0.1 --port 8000` | 8000 |
+| 5 | ADK Web | `PYTHONPATH=. uv run adk web agents/front_desk_agent --host 127.0.0.1 --port 8000` | 8000 |
 
 ADK Webを開き、起動ログに表示されるURLでFront Desk Agentとの会話を開始します（既定ポートでは`http://127.0.0.1:8000`）。部署AgentのA2A Agent Cardはそれぞれ`http://localhost:8001/.well-known/agent-card.json`、`http://localhost:8002/.well-known/agent-card.json`、`http://localhost:8003/.well-known/agent-card.json`で確認できます。Front DeskのAgent Cardはポート8004で公開されます。
 
