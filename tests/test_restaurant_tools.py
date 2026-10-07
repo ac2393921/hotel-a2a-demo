@@ -31,6 +31,14 @@ class ProposalModel(BaseLlm):
         yield LlmResponse(content=types.Content(role='model', parts=[part]))
 
 
+class FailingExplanationModel(ProposalModel):
+    async def generate_content_async(self, llm_request, stream=False):
+        if any(p.function_response for p in llm_request.contents[-1].parts or []):
+            raise RuntimeError('説明生成に失敗')
+        async for response in super().generate_content_async(llm_request, stream):
+            yield response
+
+
 class ToolTests(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         self.clock = FixedClock()
@@ -67,6 +75,13 @@ class ToolTests(unittest.IsolatedAsyncioTestCase):
         session = await runner.session_service.get_session(app_name='restaurant', user_id='demo', session_id=session_id)
         event_text = '\n'.join(e.model_dump_json() for e in session.events)
         self.assertNotIn(result['approval_token'], event_text)
+
+    async def test_completed_proposal_survives_explanation_failure(self):
+        service = ConsultationService(self.repo, self.clock, FailingExplanationModel())
+        result = await service.handle({'version':2,'action':'consult','conversation_id':'failure','message':'予約したい'})
+        self.assertEqual(result['status'], 'proposed')
+        self.assertIn('approval_token', result)
+        self.assertEqual(len(self.repo.reservations()), 3)
 
     async def test_invalid_envelope_never_invokes_model(self):
         service = ConsultationService(self.repo,self.clock,ProposalModel())

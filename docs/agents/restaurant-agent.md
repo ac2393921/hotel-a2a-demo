@@ -60,3 +60,5 @@ Guest UIの新しいセッションはversion 2予約相談を利用する。Fro
 ゲスト画面の予約案には確認内容を表示し、承認・拒否ボタンはdecisionとproposal_idを送る。Front Deskはサーバー内で保持するtokenを用いて公開A2Aへ構造化操作を送る。自然文の肯定・拒否だけではversion 2予約を更新しない。期限切れ・競合では提案を解除し、元予約を維持した再相談へ進む。
 
 時間範囲と席種を広げる場合は画面の許可チェックを利用する。既定は未許可。照合情報と承認資格を含むRestaurant向け依頼本文は通信デバッグに表示しない。承認tokenはADKの会話stateにも保持しない。
+
+Restaurantのツール定義と会話に必要な文脈を確保するため、Ollamaの`num_ctx`を8192に指定する。実環境の既定4096ではツール生成が不安定だったための調整であり、生成品質を保証するものではない。メモリ使用量は増える。一次情報: [Ollama Chat API](https://docs.ollama.com/api/chat)、[Context length](https://docs.ollama.com/context-length)、ADK/LiteLLMのロック済み実装。確認日: 2026-10-07。

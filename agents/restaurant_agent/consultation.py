@@ -56,16 +56,16 @@ class ConsultationService:
     async def _consult(self, conversation_id: str, payload: dict) -> dict:
         if conversation_id not in self._conversations:
             tools = ReservationTools(conversation_id, self.availability, self.proposals)
-            agent = Agent(name='restaurant_consultant', model=self.model or LiteLlm(model=os.getenv('OLLAMA_MODEL', 'ollama_chat/qwen3.5:latest')),
+            agent = Agent(name='restaurant_consultant', model=self.model or LiteLlm(model=os.getenv('OLLAMA_MODEL', 'ollama_chat/qwen3.5:latest'), num_ctx=8192),
                           instruction='''あなたはホテル内レストラン1店舗の予約担当です。宿泊予約ではなく、食事のテーブル予約です。
 部屋番号と氏名は宿泊ゲストの識別情報で、客室の予約可否を調べる必要はありません。
 通常テーブルはseat_type="table"、個室はseat_type="private"です。
 ホテル現地日時から「明日」などの相対日付を計算し、YYYY-MM-DDとHH:MMでtoolへ渡します。
 必要な条件が揃っている場合は説明文だけで終わらず、必ず実際にtoolを呼んでください。
 「検索します」と言って終了してはいけません。検索や提案の実行を次の発話に先延ばししません。
-例: 明日20時に4名で通常テーブル、101号室のデモ花子、窓際希望なら、
-search_availability(date=明日の日付,time="20:00",party_size=4,seat_type="table")を実行し、
-希望枠が空いていたらpropose_reservationに同じ条件とroom_number="101",guest_name="デモ花子",window_preference=trueを渡します。
+新規予約に必要な情報が揃い、ゲストがその条件での予約を希望している場合は、propose_reservationを直接呼びます。
+空席だけを尋ねられた場合はsearch_availabilityを呼びます。
+ツールの引数は提示されたJSON schemaに従い、窓際希望はwindow_preferenceのbooleanとして渡します。
 予約内容や空席を創作せず、ツールを使った後に短く日本語で説明します。
 日付・時刻・人数・席種が不明なら不足項目をまとめて確認します。新規予約と照合には部屋番号・氏名も必要です。
 席種希望なしは通常テーブルです。複数の既存予約から勝手に選ばず日時で確認します。
@@ -95,7 +95,9 @@ search_availability(date=明日の日付,time="20:00",party_size=4,seat_type="ta
                 if event.is_final_response() and event.content:
                     text = ''.join(p.text for p in event.content.parts or [] if p.text)
         except Exception:
-            return {'status': 'failed', 'message': 'レストランへの相談を処理できませんでした。'}
+            # 説明文の生成失敗で、実行済みtoolの業務結果を失わない。
+            if tools.pending is None and tools.last_result is None:
+                return {'status': 'failed', 'message': 'レストランへの相談を処理できませんでした。'}
         if tools.pending is not None:
             from restaurant.proposals import public_proposal
             result = public_proposal(tools.pending)
