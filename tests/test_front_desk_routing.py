@@ -199,7 +199,8 @@ class FrontDeskCoordinatorTests(unittest.IsolatedAsyncioTestCase):
 
                 async def run_async(self, context):
                     async def collect(agent):
-                        return [event async for event in agent.run_async(context)]
+                        runner = getattr(agent, "_run_async_impl", agent.run_async)
+                        return [event async for event in runner(context)]
 
                     for child_events in await asyncio.gather(
                         *(collect(agent) for agent in self.sub_agents)

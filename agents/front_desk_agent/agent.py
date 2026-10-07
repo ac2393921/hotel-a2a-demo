@@ -135,6 +135,30 @@ def _create_remote_agent(call: DepartmentCall) -> RemoteA2aAgent:
     )
 
 
+class _DepartmentFailureBoundary(BaseAgent):
+    """Turn one remote-service exception into an isolated department failure."""
+
+    department_name: str
+    remote_agent: Any
+
+    async def _run_async_impl(
+        self, ctx: InvocationContext
+    ) -> AsyncGenerator[Event, None]:
+        try:
+            async for event in self.remote_agent.run_async(ctx):
+                yield event
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            yield Event(
+                author=self.department_name,
+                invocation_id=ctx.invocation_id,
+                branch=ctx.branch,
+                error_message="部署AgentとのA2A通信に失敗しました。",
+                custom_metadata={"task_status": "failed"},
+            )
+
+
 def _text_from_event(event: Event) -> str:
     if not event.content or not event.content.parts:
         return ""
@@ -239,10 +263,19 @@ class FrontDeskCoordinator(BaseAgent):
             return
 
         remote_agents = [_create_remote_agent(call) for call in calls]
+        department_agents = [
+            _DepartmentFailureBoundary(
+                name=f"{call.name}_failure_boundary",
+                description=f"{call.display_name}のA2Aエラーを隔離します。",
+                department_name=call.name,
+                remote_agent=remote_agent,
+            )
+            for call, remote_agent in zip(calls, remote_agents, strict=True)
+        ]
         parallel = ParallelAgent(
             name="parallel_department_dispatch",
             description="選択した部署Agentへ独立した依頼を同時に送ります。",
-            sub_agents=remote_agents,
+            sub_agents=department_agents,
         )
         statuses = {call.name: "実行中" for call in calls}
         responses: dict[str, list[str]] = {call.name: [] for call in calls}
