@@ -13,6 +13,7 @@ from google.adk.agents.remote_a2a_agent import (
     A2A_METADATA_PREFIX,
     RemoteA2aAgent,
 )
+from google.adk.a2a.utils.agent_to_a2a import to_a2a
 from google.adk.events import Event
 from google.genai import types
 from pydantic import ValidationError
@@ -392,3 +393,6 @@ root_agent = FrontDeskCoordinator(
     description="ゲストの依頼を理解し、担当部署のA2A Agentへ委譲します。",
     sub_agents=[intent_agent],
 )
+
+# 3部署Agentと同様に、Front Deskも独立したA2Aサービスとして公開する。
+a2a_app = to_a2a(root_agent, host="localhost", port=8004)
