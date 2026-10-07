@@ -146,3 +146,5 @@ Guest UIを開き、上記の順番と架空ゲストで次を確認します。
 拒否ボタンで非更新、期限切れ時の再相談、古い提案IDへの409、通信デバッグへの氏名・部屋番号・承認tokenの非露出も確認します。起動したサービスをCtrl+Cで停止し、使用したポートのlistenが残っていないことを確認してください。他の利用者が起動済みのサービスは停止しません。
 
 Front DeskとRestaurantのOllama文脈は8192に指定します。ツール・JSON schema・会話を含む入力の切り捨てを避けるためのローカル実行設定です。モデル品質を保証するものではなく、メモリ使用量は増えます。一次情報: [Ollama Chat API](https://docs.ollama.com/api/chat)、[Context length](https://docs.ollama.com/context-length)。確認日: 2026-10-07。
+
+Restaurantへ相談中の分類結果が形式違反になった場合は、不正出力を承認や操作に解釈せず、公開A2Aの相談としてRestaurantへ不足条件を確認します。相談中でない場合は依頼の再入力を案内します。
