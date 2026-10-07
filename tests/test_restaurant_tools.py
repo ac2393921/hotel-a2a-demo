@@ -25,7 +25,7 @@ class ProposalModel(BaseLlm):
         if not any(p.function_response for p in llm_request.contents[-1].parts or []):
             part = types.Part.from_function_call(name='propose_reservation', args={
                 'date': '2026-10-08', 'time': '20:00', 'party_size': 4,
-                'seat_type': 'table', 'room_number': '101', 'guest_name': 'デモ花子'})
+                'seat_type': 'table', 'room_number': '101', 'guest_name': 'デモ花子', 'window_preference': False})
         else:
             part = types.Part.from_text(text='予約案をご確認ください。')
         yield LlmResponse(content=types.Content(role='model', parts=[part]))
@@ -52,7 +52,7 @@ class ToolTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result['status'], 'clarification_required')
 
     async def test_tool_proposal_hides_token(self):
-        result = await self.tools.propose_reservation('2026-10-08','20:00',4,'table','101','デモ花子')
+        result = await self.tools.propose_reservation('2026-10-08','20:00',4,'table','101','デモ花子',False)
         self.assertEqual(result['status'], 'proposed')
         self.assertNotIn('approval_token', result)
         self.assertEqual(self.tools.pending.conversation_id, 'bound-conversation')

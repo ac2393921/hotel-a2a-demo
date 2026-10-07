@@ -68,13 +68,13 @@ class ReservationTools:
             return self._record({'status': 'invalid_request', 'message': '予約条件とゲスト情報を確認してください。'})
 
     async def propose_reservation(self, date: str, time: str, party_size: int, seat_type: str,
-                                  room_number: str, guest_name: str, window_preference: bool = False) -> dict:
+                                  room_number: str, guest_name: str, window_preference: bool) -> dict:
         """ゲストが選んだ新規予約の条件を提案する。予約は確定しない。"""
         return await self._propose(date, time, party_size, seat_type, room_number, guest_name, window_preference)
 
     async def propose_reservation_change(self, reservation_id: str, date: str, time: str, party_size: int,
                                          seat_type: str, room_number: str, guest_name: str,
-                                         window_preference: bool = False) -> dict:
+                                         window_preference: bool) -> dict:
         """照合してゲストが選んだ予約の変更案を作る。元の予約は維持する。"""
         if not reservation_id:
             return self._record({'status': 'invalid_request', 'message': '変更対象を選んでください。'})
