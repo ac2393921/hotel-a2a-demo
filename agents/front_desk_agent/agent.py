@@ -251,16 +251,11 @@ class FrontDeskCoordinator(BaseAgent):
             try:
                 intent = validate_intent_output(raw_intent)
             except ValidationError:
-                if ctx.session.state.get("restaurant_v2_active"):
-                    # 分類の生成失敗でも、相談中の部署へ公開A2Aで確認する。
-                    # 不正な出力を承認・拒否や別部署の操作に解釈しない。
-                    intent = IntentExtractionResult(decision="clarify", response_message="予約条件を確認します。")
-                else:
-                    yield self._final_event(
-                        ctx,
-                        "ご依頼を正しく整理できませんでした。対象の内容をもう一度お知らせください。",
-                    )
-                    return
+                yield self._final_event(
+                    ctx,
+                    "ご依頼を正しく整理できませんでした。対象の内容をもう一度お知らせください。",
+                )
+                return
 
             if intent.decision in {"approve", "reject"}:
                 if not isinstance(pending_proposal_id, str) or not pending_proposal_id:

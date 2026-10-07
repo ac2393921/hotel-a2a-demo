@@ -7,3 +7,6 @@ dependencies = [
     "google-adk[a2a,extensions]>=2.11.0",
     "httpx>=0.28,<1.0",
 ]
+
+[project.optional-dependencies]
+evaluation = ["google-adk[eval]>=2.11.0"]

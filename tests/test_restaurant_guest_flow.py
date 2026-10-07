@@ -83,7 +83,7 @@ class StructuredDecisionTests(unittest.IsolatedAsyncioTestCase):
 
 
 class InvalidContinuationTests(unittest.IsolatedAsyncioTestCase):
-    async def test_invalid_classification_reconsults_without_confirmation(self):
+    async def test_invalid_classification_requests_retry_without_dispatch(self):
         from unittest.mock import patch
         from google.adk.events import Event
         from google.genai import types
@@ -106,7 +106,5 @@ class InvalidContinuationTests(unittest.IsolatedAsyncioTestCase):
             return Remote()
         with patch.object(front_desk, 'intent_agent', InvalidIntent()), patch.object(front_desk, '_create_remote_agent', side_effect=create), patch.object(front_desk, 'ParallelAgent', FakeParallelAgent):
             events = [event async for event in front_desk.root_agent._run_async_impl(ctx)]
-        self.assertEqual(len(calls), 1)
-        self.assertEqual(json.loads(calls[0].request_text)['action'], 'consult')
-        self.assertNotIn('approval_token', calls[0].request_text)
-        self.assertIn('条件を確認', events[-1].content.parts[0].text)
+        self.assertEqual(calls, [])
+        self.assertIn('もう一度', events[-1].content.parts[0].text)

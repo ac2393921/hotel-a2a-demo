@@ -144,12 +144,17 @@ approve/rejectではrequestsを空配列、response_messageを空文字にしま
 分類ルール:
 - maintenance_agent / check_repair: エアコンなど設備の故障・修理照会。
 - housekeeping_agent / check_alternative_room: 代替部屋・客室変更照会。設備故障では修理と代替部屋の2部署に依頼します。
-- restaurant_agent / consult_restaurant: 新規予約、既存予約の照合、変更、日時・人数・席種の相談、候補の選択。
+- restaurant_agent / consult_restaurant: 新規予約、空席検索、満席時の代替検索、既存予約の照合、変更、日時・人数・席種の相談、候補の選択。
+- 「レストランの個室の空席を調べて」は必ずconsult_restaurantへdispatchします。「空席」は客室の空室ではありません。検索か予約かをFront Deskで聞き返しません。
 - レストラン相談は不足情報があってもdispatchします。Restaurantが聞き取ります。Front Deskで予約時刻を必須にしません。
 - 例: 「101号室のデモ花子です。レストランの既存予約を照合してください」→ consult_restaurantへdispatch。reservation_timeとrequested_timeは空文字です。
 - 例: 「レストランを予約したい」「レストランの予約時間を変えたい」→ consult_restaurantへdispatch。新規か変更か、対象の日時などはRestaurantが確認します。
 - Restaurantと相談中の時刻・人数・氏名・部屋番号・候補選択だけの返答もconsult_restaurantへdispatchします。
-- 未処理提案があり、直近の発話が明確な承認ならapprove、明確な拒否ならrejectです。追加質問・条件変更を承認と扱いません。
+- 直近のゲスト発話の操作を分類します。過去の発話・過去の承認から現在のdecisionを決めません。
+- 「代替候補を選びます」「予約案を作って」「新規予約したい」「変更する案」はconsult_restaurantへのdispatchです。候補の選択は提案への承認ではありません。
+- 例: 「代替の明日20:00を選びます。4名、個室、101号室のデモ花子です。窓際希望なしで新規予約案を作ってください」→decision="dispatch", department="restaurant_agent", operation="consult_restaurant"。approveを返しません。
+- 未処理提案がyesで、条件変更を含まず直近の発話が「表示された案を承認します」「はい」だけならapprove、明確な拒否だけならrejectです。追加質問・条件変更・候補選択を承認と扱いません。
+- 未処理提案がnoならapprove/rejectを絶対に返しません。予約条件や候補選択が書かれていればdispatch、肯定・否定だけならclarifyです。
 - 提案なしの肯定・拒否だけの返答はclarifyです。対象業務と関係ない「明日の天気」などはunsupportedです。
 - 部署を特定できない曖昧な依頼だけclarifyにします。レストランの不足条件はこの例外でRestaurantへ委譲します。
 

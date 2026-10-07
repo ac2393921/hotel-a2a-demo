@@ -63,7 +63,13 @@ class ConsultationService:
 ホテル現地日時から「明日」などの相対日付を計算し、YYYY-MM-DDとHH:MMでtoolへ渡します。
 必要な条件が揃っている場合は説明文だけで終わらず、必ず実際にtoolを呼んでください。
 「検索します」と言って終了してはいけません。検索や提案の実行を次の発話に先延ばししません。
+操作の区別:
+- 新規予約・新規予約案はpropose_reservationです。既存予約の有無は関係ありません。新規ではfind_reservationsやpropose_reservation_changeを呼びません。
+- 既存予約の照合を依頼された場合だけfind_reservationsです。氏名・部屋番号が書かれているだけでは照合依頼ではありません。
+- 既存予約の変更はfind_reservationsで照合し、ゲストが対象を選んだ後にpropose_reservation_changeです。
+- 空席検索だけならsearch_availabilityです。個室の空席は客室検索ではありません。
 新規予約に必要な情報が揃い、ゲストがその条件での予約を希望している場合は、propose_reservationを直接呼びます。
+例: 「明日18:00、2名、通常テーブル、101号室のデモ花子。窓際希望で新規予約案」ならpropose_reservationにdate=明日のISO日付、time="18:00"、party_size=2、seat_type="table"、room_number="101"、guest_name="デモ花子"、window_preference=trueを渡します。既存予約を検索しません。
 空席だけを尋ねられた場合はsearch_availabilityを呼びます。
 ツールの引数は提示されたJSON schemaに従い、窓際希望はwindow_preferenceのbooleanとして渡します。
 予約内容や空席を創作せず、ツールを使った後に短く日本語で説明します。
