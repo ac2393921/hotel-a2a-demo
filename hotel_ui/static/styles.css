@@ -1014,3 +1014,14 @@ h1 {
     transition-duration: 0.01ms !important;
   }
 }
+
+.reservation-options {
+  margin: 0 0 12px;
+  padding: 12px;
+  border: 1px solid var(--border-color, #d0d5dd);
+  border-radius: 8px;
+}
+.reservation-options label {
+  display: block;
+  margin: 8px 0;
+}

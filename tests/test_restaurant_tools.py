@@ -25,10 +25,18 @@ class ProposalModel(BaseLlm):
         if not any(p.function_response for p in llm_request.contents[-1].parts or []):
             part = types.Part.from_function_call(name='propose_reservation', args={
                 'date': '2026-10-08', 'time': '20:00', 'party_size': 4,
-                'seat_type': 'table', 'room_number': '101', 'guest_name': 'デモ花子'})
+                'seat_type': 'table', 'room_number': '101', 'guest_name': 'デモ花子', 'window_preference': False})
         else:
             part = types.Part.from_text(text='予約案をご確認ください。')
         yield LlmResponse(content=types.Content(role='model', parts=[part]))
+
+
+class FailingExplanationModel(ProposalModel):
+    async def generate_content_async(self, llm_request, stream=False):
+        if any(p.function_response for p in llm_request.contents[-1].parts or []):
+            raise RuntimeError('説明生成に失敗')
+        async for response in super().generate_content_async(llm_request, stream):
+            yield response
 
 
 class ToolTests(unittest.IsolatedAsyncioTestCase):
@@ -52,7 +60,7 @@ class ToolTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result['status'], 'clarification_required')
 
     async def test_tool_proposal_hides_token(self):
-        result = await self.tools.propose_reservation('2026-10-08','20:00',4,'table','101','デモ花子')
+        result = await self.tools.propose_reservation('2026-10-08','20:00',4,'table','101','デモ花子',False)
         self.assertEqual(result['status'], 'proposed')
         self.assertNotIn('approval_token', result)
         self.assertEqual(self.tools.pending.conversation_id, 'bound-conversation')
@@ -67,6 +75,13 @@ class ToolTests(unittest.IsolatedAsyncioTestCase):
         session = await runner.session_service.get_session(app_name='restaurant', user_id='demo', session_id=session_id)
         event_text = '\n'.join(e.model_dump_json() for e in session.events)
         self.assertNotIn(result['approval_token'], event_text)
+
+    async def test_completed_proposal_survives_explanation_failure(self):
+        service = ConsultationService(self.repo, self.clock, FailingExplanationModel())
+        result = await service.handle({'version':2,'action':'consult','conversation_id':'failure','message':'予約したい'})
+        self.assertEqual(result['status'], 'proposed')
+        self.assertIn('approval_token', result)
+        self.assertEqual(len(self.repo.reservations()), 3)
 
     async def test_invalid_envelope_never_invokes_model(self):
         service = ConsultationService(self.repo,self.clock,ProposalModel())

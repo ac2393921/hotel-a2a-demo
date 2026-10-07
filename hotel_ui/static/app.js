@@ -373,7 +373,7 @@ function setSending(value) {
   }
 }
 
-async function sendMessage(text) {
+async function sendMessage(text, decision = null) {
   const cleanText = text.trim();
   if (!cleanText || isSending || !sessionId) {
     return;
@@ -391,7 +391,11 @@ async function sendMessage(text) {
       `/api/sessions/${encodeURIComponent(sessionId)}/messages`,
       {
         method: "POST",
-        body: JSON.stringify({ text: cleanText }),
+        body: JSON.stringify({ text: cleanText,
+          ...(decision ? { decision, proposal_id: pendingProposal?.proposal_id } : {}),
+          expand_time_permitted: document.querySelector("#expand-time-permitted").checked,
+          alternate_seat_permitted: document.querySelector("#alternate-seat-permitted").checked,
+        }),
       },
     );
     messages.push({ role: "assistant", text: result.reply });
@@ -442,11 +446,11 @@ messageInput.addEventListener("keydown", (event) => {
 });
 
 approveButton.addEventListener("click", () => {
-  void sendMessage("はい、この変更案を承認します。");
+  void sendMessage("この予約案を承認します。", "approve");
 });
 
 rejectButton.addEventListener("click", () => {
-  void sendMessage("いいえ、この変更案は拒否します。");
+  void sendMessage("この予約案を拒否します。", "reject");
 });
 
 exampleButton.addEventListener("click", () => {
