@@ -24,6 +24,7 @@ from agents.front_desk_agent.intent import (
 )
 
 PROPOSED_RESTAURANT_TIME = "20:00"
+PENDING_RESTAURANT_PROPOSAL_KEY = "front_desk_pending_restaurant_proposal_id"
 
 
 @dataclass(frozen=True)
@@ -93,6 +94,22 @@ def build_department_calls(
                 )
             )
     return calls
+
+
+def build_approval_call(decision: str, proposal_id: str) -> DepartmentCall:
+    """Create a Restaurant A2A command for an explicit guest decision."""
+    action = {"approve": "approve_change", "reject": "reject_change"}.get(decision)
+    if action is None:
+        raise ValueError("承認または拒否の決定が必要です")
+    return DepartmentCall(
+        name="restaurant_agent",
+        display_name="Restaurant Agent",
+        description="ゲストの判断を予約変更案へ反映するRestaurant Agent",
+        agent_card=_agent_card_url("RESTAURANT_AGENT_BASE_URL", 8003),
+        request_text=json.dumps(
+            {"action": action, "proposal_id": proposal_id}, ensure_ascii=False
+        ),
+    )
 
 
 def _request_context(request_text: str):
@@ -174,6 +191,10 @@ class FrontDeskCoordinator(BaseAgent):
     async def _run_async_impl(
         self, ctx: InvocationContext
     ) -> AsyncGenerator[Event, None]:
+        pending_proposal_id = ctx.state.get(PENDING_RESTAURANT_PROPOSAL_KEY)
+        ctx.state["restaurant_change_pending"] = (
+            "yes" if pending_proposal_id else "no"
+        )
         raw_intent: str | None = None
         async for event in intent_agent.run_async(ctx):
             yield event
@@ -196,14 +217,23 @@ class FrontDeskCoordinator(BaseAgent):
             )
             return
 
-        if intent.decision != "dispatch":
+        if intent.decision in {"approve", "reject"}:
+            if not isinstance(pending_proposal_id, str) or not pending_proposal_id:
+                yield self._final_event(
+                    ctx,
+                    "有効な変更案が見つかりません。現在の予約変更案を確認してください。",
+                )
+                return
+            calls = [build_approval_call(intent.decision, pending_proposal_id)]
+        elif intent.decision != "dispatch":
             yield self._final_event(
                 ctx,
                 intent.response_message or "ご依頼の内容をもう少し詳しく教えてください。",
             )
             return
 
-        calls = build_department_calls(intent)
+        else:
+            calls = build_department_calls(intent)
         if not calls:
             yield self._final_event(ctx, "ご依頼に対応する部署を選べませんでした。")
             return
@@ -247,6 +277,27 @@ class FrontDeskCoordinator(BaseAgent):
                     if status:
                         statuses[event.author] = status
                     response_text = _text_from_event(event)
+                    if event.author == "restaurant_agent" and response_text:
+                        response_text = self._handle_restaurant_response(
+                            ctx, response_text
+                        )
+                        if response_text != _text_from_event(event):
+                            custom_metadata = {
+                                key: value
+                                for key, value in (event.custom_metadata or {}).items()
+                                if key != f"{A2A_METADATA_PREFIX}response"
+                            }
+                            event = event.model_copy(
+                                update={
+                                    "content": types.Content(
+                                        role="model",
+                                        parts=[
+                                            types.Part.from_text(text=response_text)
+                                        ],
+                                    ),
+                                    "custom_metadata": custom_metadata,
+                                }
+                            )
                     if response_text and response_text not in responses[event.author]:
                         responses[event.author].append(response_text)
                 yield event
@@ -263,6 +314,33 @@ class FrontDeskCoordinator(BaseAgent):
             ctx,
             _response_summary(calls, statuses, responses, task_ids),
         )
+
+    @staticmethod
+    def _handle_restaurant_response(
+        ctx: InvocationContext, response_text: str
+    ) -> str:
+        try:
+            response = json.loads(response_text)
+        except json.JSONDecodeError:
+            return response_text
+        if not isinstance(response, dict):
+            return response_text
+
+        status = response.get("status")
+        message = response.get("message")
+        if status == "proposed":
+            proposal_id = response.get("proposal_id")
+            if isinstance(proposal_id, str) and proposal_id:
+                ctx.state[PENDING_RESTAURANT_PROPOSAL_KEY] = proposal_id
+            return (
+                "20時への変更案が可能です。予約はまだ変更していません。"
+                "この変更案を承認しますか？"
+            )
+        if status in {"approved", "rejected", "not_found"}:
+            ctx.state.pop(PENDING_RESTAURANT_PROPOSAL_KEY, None)
+        if isinstance(message, str) and message:
+            return message
+        return response_text
 
     def _final_event(self, ctx: InvocationContext, message: str) -> Event:
         return Event(

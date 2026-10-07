@@ -59,7 +59,7 @@ class IntentExtractionResult(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    decision: Literal["dispatch", "clarify", "unsupported"]
+    decision: Literal["dispatch", "clarify", "unsupported", "approve", "reject"]
     requests: list[DepartmentIntent] = Field(default_factory=list, max_length=3)
     response_message: str | None = Field(default=None, max_length=300)
 
@@ -72,6 +72,9 @@ class IntentExtractionResult(BaseModel):
         if self.decision == "dispatch":
             if not self.requests or self.response_message is not None:
                 raise ValueError("dispatchには依頼だけを指定してください")
+        elif self.decision in {"approve", "reject"}:
+            if self.requests or self.response_message is not None:
+                raise ValueError("承認・拒否には部署依頼や確認文を含められません")
         elif self.requests or not self.response_message:
             raise ValueError("確認・対象外の応答には依頼を含めず説明を指定してください")
         return self
@@ -92,7 +95,7 @@ class _ModelDepartmentIntent(BaseModel):
 class _ModelIntentExtractionResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    decision: Literal["dispatch", "clarify", "unsupported"]
+    decision: Literal["dispatch", "clarify", "unsupported", "approve", "reject"]
     requests: list[_ModelDepartmentIntent]
     response_message: str
 
@@ -127,8 +130,11 @@ intent_agent = Agent(
 あなたはホテルFront Deskの依頼分類担当です。ゲストの文章を読み、必ず指定されたJSON出力スキーマで返してください。
 
 JSON形式:
-{"decision":"dispatch|clarify|unsupported","requests":[{"department":"maintenance_agent|housekeeping_agent|restaurant_agent","operation":"check_repair|check_alternative_room|propose_reservation_time_change","details":"依頼内容","reservation_time":"HH:MMまたは空文字","requested_time":"HH:MMまたは空文字"}],"response_message":"確認・対象外の説明または空文字"}
+{"decision":"dispatch|clarify|unsupported|approve|reject","requests":[{"department":"maintenance_agent|housekeeping_agent|restaurant_agent","operation":"check_repair|check_alternative_room|propose_reservation_time_change","details":"依頼内容","reservation_time":"HH:MMまたは空文字","requested_time":"HH:MMまたは空文字"}],"response_message":"確認・対象外の説明または空文字"}
 必ず全フィールドを出力します。dispatchではrequestsを1件以上、response_messageを空文字にします。clarify/unsupportedではrequestsを空配列にし、response_messageを具体的な文にします。レストラン以外の予約時刻は空文字にします。
+
+会話状態: この会話で未処理のRestaurant変更案があるかは {restaurant_change_pending} です。
+未処理の変更案がある場合、Guestの直近の発話がその変更案を明確に承認していればapprove、明確に断っていればrejectにします。承認・拒否ではrequestsを空配列、response_messageを空文字にします。曖昧な返答や追加質問はclarifyにし、確認します。未処理の変更案がない場合、肯定・拒否だけの返事を承認・拒否として扱わずclarifyにします。提案IDを生成・推測してはいけません。
 
 対象部署と依頼:
 - maintenance_agent / check_repair: エアコンなど設備の故障・修理照会
