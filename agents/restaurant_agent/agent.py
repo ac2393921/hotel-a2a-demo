@@ -11,6 +11,8 @@ from google.adk.a2a.utils.agent_to_a2a import to_a2a
 from google.adk.events import Event
 from google.genai import types
 
+from agents.restaurant_agent.consultation import consultation_service
+
 MAX_REQUEST_LENGTH = 2_000
 CURRENT_RESERVATION_TIME = "19:00"
 PROPOSED_RESERVATION_TIME = "20:00"
@@ -118,7 +120,10 @@ async def response_for_request(
         except json.JSONDecodeError:
             payload = None
         if isinstance(payload, dict):
-            result = await store.handle(payload)
+            if "version" in payload:
+                result = await consultation_service.handle(payload)
+            else:
+                result = await store.handle(payload)
         else:
             result = {
                 "status": "invalid_request",
@@ -159,8 +164,9 @@ class RestaurantAgent(BaseAgent):
 root_agent = RestaurantAgent(
     name="restaurant_agent",
     description=(
-        "レストラン予約の照会を担当します。デモでは19時の予約を20時へ"
-        "変更できると提案し、提案ID付きの明示的な承認を受けてから状態を更新します。"
+        "館内レストランの空席検索、予約照合、新規予約と変更の相談・提案を担当します。"
+        "LLMは業務toolで候補を確認します。提案だけでは予約は確定しません。"
+        "version未指定の旧固定時刻デモは互換経路として独立して処理します。"
     ),
 )
 
