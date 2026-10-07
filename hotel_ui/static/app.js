@@ -20,12 +20,19 @@ const taskTimeline = document.querySelector("#task-timeline");
 const timelineEmpty = document.querySelector("#timeline-empty");
 const taskCount = document.querySelector("#task-count");
 const partialFailure = document.querySelector("#partial-failure");
+const frontDeskActivity = document.querySelector("#front-desk-activity");
+const debugPanel = document.querySelector("#debug-panel");
+const debugLog = document.querySelector("#debug-log");
+const debugEmpty = document.querySelector("#debug-empty");
+const debugCount = document.querySelector("#debug-count");
 
 let sessionId = null;
 let messages = [];
 let pendingProposal = null;
 let agents = [];
 let tasks = [];
+let debugEvents = [];
+let agentActivity = {};
 let isSending = false;
 
 async function request(path, options = {}) {
@@ -51,6 +58,8 @@ async function createSession() {
   messages = [];
   pendingProposal = null;
   tasks = [];
+  debugEvents = [];
+  agentActivity = { front_desk_agent: { status: "待機中" } };
   render();
 }
 
@@ -67,6 +76,8 @@ async function loadSession() {
     messages = result.messages;
     pendingProposal = result.pending_proposal;
     tasks = result.tasks || [];
+    debugEvents = result.debug_events || [];
+    agentActivity = result.agent_activity || {};
     render();
   } catch {
     await createSession();
@@ -107,10 +118,13 @@ function createAgentCard(agent) {
   heading.append(name, availability);
 
   const relatedTasks = tasks.filter((task) => task.agent_id === agent.id);
+  const activity = agentActivity[agent.id];
   const requestStatus = document.createElement("p");
-  requestStatus.className = "agent-request-status";
-  requestStatus.textContent = relatedTasks.length
-    ? `今回の状態: ${relatedTasks.at(-1).events.at(-1)?.status || "状態不明"}`
+  const currentStatus = activity?.status
+    || (relatedTasks.length ? relatedTasks.at(-1).events.at(-1)?.status : null);
+  requestStatus.className = `agent-request-status${currentStatus && ["依頼送信済み", "受付済み", "対応中", "実行中"].includes(currentStatus) ? " is-active" : ""}`;
+  requestStatus.textContent = currentStatus
+    ? `今回の状態: ${currentStatus}`
     : "今回の依頼なし";
 
   const description = document.createElement("p");
@@ -224,6 +238,115 @@ function renderTasks() {
     : "一部の部署から応答を得られませんでした。受信できた結果は表示しています。";
 }
 
+function debugKindLabel(kind) {
+  return {
+    guest_request: "ゲスト依頼",
+    request_sent: "A2A送信",
+    task_update: "Task状態",
+    response_received: "A2A応答",
+    guest_reply: "ゲストへの回答",
+    execution_failed: "処理エラー",
+  }[kind] || "通信イベント";
+}
+
+function createDebugEntry(event) {
+  const item = document.createElement("li");
+  item.dataset.eventId = event.id;
+  item.className = `debug-entry debug-entry--${event.status === "失敗" ? "failed" : "normal"}`;
+
+  const header = document.createElement("div");
+  header.className = "debug-entry-heading";
+  const kind = document.createElement("span");
+  kind.className = "debug-kind";
+  kind.textContent = debugKindLabel(event.kind);
+  const time = document.createElement("time");
+  if (event.timestamp) {
+    time.dateTime = event.timestamp;
+    time.textContent = new Date(event.timestamp).toLocaleTimeString("ja-JP", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+  } else {
+    time.textContent = "時刻不明";
+  }
+  header.append(kind, time);
+
+  const direction = document.createElement("p");
+  direction.className = "debug-direction";
+  direction.textContent = event.direction;
+  const summary = document.createElement("p");
+  summary.className = "debug-summary";
+  summary.textContent = event.summary;
+  const status = document.createElement("span");
+  status.className = `debug-status${event.status === "失敗" ? " is-failed" : ""}`;
+  status.textContent = event.status;
+
+  item.append(header, direction, summary, status);
+  if (event.task_id) {
+    const taskId = document.createElement("code");
+    taskId.className = "debug-task-id";
+    taskId.textContent = `Task ID: ${event.task_id}`;
+    item.append(taskId);
+  }
+  if (event.payload) {
+    const payload = document.createElement("details");
+    payload.className = "debug-payload";
+    const label = document.createElement("summary");
+    label.textContent = "送信ペイロードを表示";
+    const text = document.createElement("pre");
+    text.textContent = event.payload;
+    payload.append(label, text);
+    item.append(payload);
+  }
+  return item;
+}
+
+function renderDebug() {
+  const wasAtBottom = debugLog.scrollHeight - debugLog.scrollTop - debugLog.clientHeight < 24;
+  const currentIds = new Set(debugEvents.map((event) => event.id));
+  for (const entry of debugLog.children) {
+    if (!currentIds.has(entry.dataset.eventId)) {
+      entry.remove();
+    }
+  }
+  const renderedIds = new Set(Array.from(debugLog.children, (entry) => entry.dataset.eventId));
+  let addedEntry = false;
+  for (const event of debugEvents) {
+    if (!renderedIds.has(event.id)) {
+      debugLog.append(createDebugEntry(event));
+      addedEntry = true;
+    }
+  }
+  if (addedEntry && wasAtBottom) {
+    debugLog.scrollTop = debugLog.scrollHeight;
+  }
+  debugEmpty.hidden = debugEvents.length > 0;
+  debugCount.textContent = String(debugEvents.length);
+  const frontDeskStatus = agentActivity.front_desk_agent?.status || "待機中";
+  frontDeskActivity.textContent = frontDeskStatus;
+  frontDeskActivity.classList.toggle("is-active", isSending);
+}
+
+async function pollSessionWhileSending() {
+  while (isSending) {
+    try {
+      const current = await request(`/api/sessions/${encodeURIComponent(sessionId)}/debug`);
+      debugEvents = current.debug_events || debugEvents;
+      agentActivity = current.agent_activity || agentActivity;
+      tasks = current.tasks || tasks;
+      renderAgents();
+      renderTasks();
+      renderDebug();
+    } catch {
+      // The original request reports the guest-facing error.
+    }
+    if (isSending) {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    }
+  }
+}
+
 function render() {
   messageList.replaceChildren(...messages.map(createMessageElement));
   emptyState.hidden = messages.length > 0;
@@ -233,6 +356,7 @@ function render() {
   }
   renderAgents();
   renderTasks();
+  renderDebug();
   conversation.scrollTop = conversation.scrollHeight;
 }
 
@@ -243,6 +367,10 @@ function setSending(value) {
   approveButton.disabled = value;
   rejectButton.disabled = value;
   liveStatus.textContent = value ? "Front Deskが確認しています。" : "";
+  if (value) {
+    debugPanel.open = true;
+    frontDeskActivity.textContent = "依頼を整理中";
+  }
 }
 
 async function sendMessage(text) {
@@ -255,6 +383,7 @@ async function sendMessage(text) {
   errorMessage.hidden = true;
   render();
   setSending(true);
+  const tracePolling = pollSessionWhileSending();
   let responseReceived = false;
 
   try {
@@ -268,6 +397,8 @@ async function sendMessage(text) {
     messages.push({ role: "assistant", text: result.reply });
     pendingProposal = result.pending_proposal;
     tasks = result.tasks || [];
+    debugEvents = result.debug_events || debugEvents;
+    agentActivity = result.agent_activity || agentActivity;
     responseReceived = true;
   } catch (error) {
     errorMessage.textContent = error.message;
@@ -277,11 +408,14 @@ async function sendMessage(text) {
       messages = current.messages;
       pendingProposal = current.pending_proposal;
       tasks = current.tasks || [];
+      debugEvents = current.debug_events || debugEvents;
+      agentActivity = current.agent_activity || agentActivity;
     } catch {
       // Keep the current conversation visible so the guest can retry.
     }
   } finally {
     setSending(false);
+    await tracePolling;
     if (responseReceived) {
       liveStatus.textContent = "フロントデスクから回答を受け取り、部署AgentのTask状況を更新しました。";
     }
