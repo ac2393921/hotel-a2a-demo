@@ -14,10 +14,18 @@ const rejectButton = document.querySelector("#reject-button");
 const exampleButton = document.querySelector("#example-button");
 const errorMessage = document.querySelector("#error-message");
 const liveStatus = document.querySelector("#live-status");
+const agentList = document.querySelector("#agent-list");
+const agentLoadStatus = document.querySelector("#agent-load-status");
+const taskTimeline = document.querySelector("#task-timeline");
+const timelineEmpty = document.querySelector("#timeline-empty");
+const taskCount = document.querySelector("#task-count");
+const partialFailure = document.querySelector("#partial-failure");
 
 let sessionId = null;
 let messages = [];
 let pendingProposal = null;
+let agents = [];
+let tasks = [];
 let isSending = false;
 
 async function request(path, options = {}) {
@@ -42,6 +50,7 @@ async function createSession() {
   sessionStorage.setItem(sessionKey, sessionId);
   messages = [];
   pendingProposal = null;
+  tasks = [];
   render();
 }
 
@@ -57,6 +66,7 @@ async function loadSession() {
     sessionId = result.session_id;
     messages = result.messages;
     pendingProposal = result.pending_proposal;
+    tasks = result.tasks || [];
     render();
   } catch {
     await createSession();
@@ -83,6 +93,134 @@ function createMessageElement(message) {
   return article;
 }
 
+function createAgentCard(agent) {
+  const card = document.createElement("article");
+  card.className = "agent-card";
+
+  const heading = document.createElement("div");
+  heading.className = "agent-card-heading";
+  const name = document.createElement("h3");
+  name.textContent = agent.name || agent.label;
+  const availability = document.createElement("span");
+  availability.className = `agent-availability${agent.available ? " is-available" : ""}`;
+  availability.textContent = agent.available ? "接続中" : "未接続";
+  heading.append(name, availability);
+
+  const relatedTasks = tasks.filter((task) => task.agent_id === agent.id);
+  const requestStatus = document.createElement("p");
+  requestStatus.className = "agent-request-status";
+  requestStatus.textContent = relatedTasks.length
+    ? `今回の状態: ${relatedTasks.at(-1).events.at(-1)?.status || "状態不明"}`
+    : "今回の依頼なし";
+
+  const description = document.createElement("p");
+  description.className = "agent-description";
+  description.textContent = agent.description;
+  card.append(heading, requestStatus, description);
+
+  if (agent.skills?.length) {
+    const skillList = document.createElement("ul");
+    skillList.className = "agent-skills";
+    for (const skill of agent.skills) {
+      const item = document.createElement("li");
+      const skillName = document.createElement("strong");
+      skillName.textContent = skill.name;
+      const skillDescription = document.createElement("span");
+      skillDescription.textContent = skill.description;
+      item.append(skillName, skillDescription);
+      skillList.append(item);
+    }
+    card.append(skillList);
+  }
+  return card;
+}
+
+function createTaskElement(task) {
+  const article = document.createElement("article");
+  article.className = "task-card";
+
+  const heading = document.createElement("div");
+  heading.className = "task-card-heading";
+  const agentName = document.createElement("h4");
+  agentName.textContent = task.agent_name;
+  const latestStatus = task.events.at(-1)?.status || "状態不明";
+  const stateClass = latestStatus === "失敗"
+    ? "failed"
+    : latestStatus === "完了"
+      ? "complete"
+      : "pending";
+  const state = document.createElement("span");
+  state.className = `task-state task-state--${stateClass}`;
+  state.textContent = latestStatus;
+  heading.append(agentName, state);
+  article.append(heading);
+
+  if (task.task_id) {
+    const taskId = document.createElement("p");
+    taskId.className = "task-id";
+    taskId.textContent = `Task ID: ${task.task_id}`;
+    article.append(taskId);
+  }
+
+  const entries = document.createElement("ol");
+  entries.className = "timeline-events";
+  for (const event of task.events) {
+    const item = document.createElement("li");
+    const time = document.createElement("time");
+    if (event.timestamp) {
+      time.dateTime = event.timestamp;
+      time.textContent = new Date(event.timestamp).toLocaleTimeString("ja-JP", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+    } else {
+      time.textContent = "時刻不明";
+    }
+    const detail = document.createElement("div");
+    const status = document.createElement("strong");
+    status.textContent = event.status;
+    detail.append(status);
+    if (event.text) {
+      const text = document.createElement("p");
+      text.textContent = event.text;
+      detail.append(text);
+    }
+    item.append(time, detail);
+    entries.append(item);
+  }
+  article.append(entries);
+  return article;
+}
+
+async function loadAgents() {
+  try {
+    const result = await request("/api/agents");
+    agents = result.agents;
+    agentLoadStatus.textContent = "Agent Cardの能力情報";
+  } catch {
+    agentLoadStatus.textContent = "能力情報を取得できません";
+  }
+  renderAgents();
+}
+
+function renderAgents() {
+  agentList.replaceChildren(...agents.map(createAgentCard));
+}
+
+function renderTasks() {
+  taskTimeline.replaceChildren(...tasks.map(createTaskElement));
+  timelineEmpty.hidden = tasks.length > 0;
+  taskCount.textContent = String(tasks.length);
+
+  const succeeded = tasks.some((task) => task.events.some((event) => event.status === "完了"));
+  const failed = tasks.some((task) => task.events.some((event) => event.status === "失敗"));
+  partialFailure.hidden = !(succeeded && failed);
+  partialFailure.textContent = partialFailure.hidden
+    ? ""
+    : "一部の部署から応答を得られませんでした。受信できた結果は表示しています。";
+}
+
 function render() {
   messageList.replaceChildren(...messages.map(createMessageElement));
   emptyState.hidden = messages.length > 0;
@@ -90,6 +228,8 @@ function render() {
   if (pendingProposal) {
     proposalText.textContent = pendingProposal.text;
   }
+  renderAgents();
+  renderTasks();
   conversation.scrollTop = conversation.scrollHeight;
 }
 
@@ -112,6 +252,7 @@ async function sendMessage(text) {
   errorMessage.hidden = true;
   render();
   setSending(true);
+  let responseReceived = false;
 
   try {
     const result = await request(
@@ -123,6 +264,8 @@ async function sendMessage(text) {
     );
     messages.push({ role: "assistant", text: result.reply });
     pendingProposal = result.pending_proposal;
+    tasks = result.tasks || [];
+    responseReceived = true;
   } catch (error) {
     errorMessage.textContent = error.message;
     errorMessage.hidden = false;
@@ -130,11 +273,15 @@ async function sendMessage(text) {
       const current = await request(`/api/sessions/${encodeURIComponent(sessionId)}`);
       messages = current.messages;
       pendingProposal = current.pending_proposal;
+      tasks = current.tasks || [];
     } catch {
       // Keep the current conversation visible so the guest can retry.
     }
   } finally {
     setSending(false);
+    if (responseReceived) {
+      liveStatus.textContent = "フロントデスクから回答を受け取り、部署AgentのTask状況を更新しました。";
+    }
     render();
     messageInput.focus();
   }
@@ -174,3 +321,4 @@ void loadSession().catch((error) => {
   errorMessage.textContent = error.message;
   errorMessage.hidden = false;
 });
+void loadAgents();

@@ -888,12 +888,14 @@ source = { virtual = "." }
 dependencies = [
     { name = "fastapi" },
     { name = "google-adk", extra = ["a2a", "extensions"] },
+    { name = "httpx" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "fastapi", specifier = ">=0.115,<1.0" },
     { name = "google-adk", extras = ["a2a", "extensions"], specifier = ">=2.11.0" },
+    { name = "httpx", specifier = ">=0.28,<1.0" },
 ]
 
 [[package]]
