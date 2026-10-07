@@ -56,7 +56,7 @@ def main():
 
         print('[2/4] 個室満席から同じ席種の代替を選択', flush=True)
         full = Guest(client)
-        search = full.send(f'{tomorrow}の19:00、4名、個室の空席を調べてください。')
+        search = full.send(f'館内レストランの{tomorrow}の19:00、4名、個室の空席を調べてください。')
         assert '満席' in search['reply'] and '20:00' in search['reply']
         p = full.propose(f'代替の{tomorrow}20:00を選びます。4名、個室、101号室のデモ花子です。窓際希望なしで新規予約案を作ってください。')
         confirmed(full.approve(p))
@@ -70,7 +70,7 @@ def main():
 
         print('[4/4] 二つの提案後に先に別ゲストが確定し、変更は競合', flush=True)
         other = Guest(client)
-        first = other.propose(f'{race_day}20:30、4名、個室を新規予約したいです。202号室の架空太郎です。窓際希望なしです。')
+        first = other.propose(f'館内レストランの{race_day}20:30、4名、個室を新規予約したいです。202号室の架空太郎です。窓際希望なしです。')
         original = Guest(client)
         found = original.send('101号室のデモ花子です。レストランの既存予約を照合してください。')
         assert 'demo-dinner' in found['reply']
