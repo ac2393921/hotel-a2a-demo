@@ -42,7 +42,7 @@ Front Deskはゲスト本人の明示承認を確認してから`approve_change`
 
 `{"version":2,"action":"consult","conversation_id":"Front Deskの会話ID","message":"ゲストの依頼"}` を受け付け、RestaurantのLLMが空席検索・予約照合・新規提案・変更提案toolを使う。会話IDはtool引数に含めず、サーバー側で束縛する。`expand_time_permitted` と `alternate_seat_permitted` はFront Deskがゲストの許可を確認して設定する真偽値で、既定はfalse。確定・拒否toolはLLMへ公開しない。
 
-結果は業務toolの構造化結果を優先する。提案の承認tokenはLLMのtool応答と内部会話イベントに含めず、サーバー間の応答にのみ付ける。Front DeskとUIの対応はTask #56で接続する。version 2の確定はTask #55まで未実装であり、現段階では成功を返さない。既存version未指定の固定時刻デモは独立した互換状態を利用する。
+結果は業務toolの構造化結果を優先する。提案の承認tokenはLLMのtool応答と内部会話イベントに含めず、サーバー間の応答にのみ付ける。Front DeskとUIの対応はTask #56で接続する。version 2の確定・拒否はLLMを経由せず、conversation_id・proposal_id・approval_tokenを持つ構造化コマンドで処理する。既存version未指定の固定時刻デモは独立した互換状態を利用する。
 
 公式確認（2026-10-07）:
 - Function tools: https://adk.dev/tools-custom/function-tools/
@@ -50,3 +50,5 @@ Front Deskはゲスト本人の明示承認を確認してから`approve_change`
 - LiteLLM: https://adk.dev/agents/models/litellm/
 
 ロックされたADKのRunner.run_async、InMemorySessionService、FunctionTool変換を模擬モデルで実行して確認する。実モデルでの予約相談とFront Desk/UIのE2Eは接続完了後に検証する。
+
+確定時は会話・token・期限・変更元の版・空席を再確認する。競合時は元予約を維持し、再検索候補を返す。確定済み提案の同じ会話・tokenによる再送は同じ結果を返し、拒否済み・競合済み提案を再確定しない。予約更新と提案消費は一体のtransactionで処理する。
