@@ -303,7 +303,7 @@ MVPの実装範囲とは区別して、次期Restaurant拡充の設計を[ADR 00
 - 既存予約は架空の部屋番号と氏名で照合し、複数なら日時を確認して選ぶ。本番の本人認証を意味しない。
 - 業務APIはヘキサゴナルアーキテクチャとし、Restaurant内部のtoolから呼ぶ。ドメインとユースケースをADK・A2A・保存実装から独立させる。Front Deskからの連携は公開A2Aのみとする。
 - 予約・提案はRestaurantプロセス内のインメモリで保持し、再起動で架空の初期状態に戻す。別HTTPサービスやDB導入は今回必須にしない。
-- RestaurantへのLLM追加、タイムゾーン、提案のライフサイクル・会話への紐付け、契約の移行方法は未決。先頭設計Taskで確認・記録してから実装する。
+- RestaurantへのLLM追加、Asia/Tokyo、提案の期限・会話への紐付け、構造化承認と契約の移行方針はADR 0006と予約契約で決定済み。実装と検証は後続Taskで行う。
 - 代表シナリオは希望どおりの予約、満席からの代替選択、既存予約変更、承認時の競合による再提案。取消・決済・食事制限・ルームサービスと他部署拡充は対象外。
 
 RestaurantへのLLM追加は[ADR 0006](adr/0006-restaurant-llm-tools-and-approval.md)で決定した。確定操作はLLMから分離し、Guest UIの構造化承認経路で処理する。次期業務の具体的な契約は[Restaurant予約契約](agents/restaurant-reservation-contract.md)を参照。
