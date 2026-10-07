@@ -19,7 +19,8 @@ from google.adk.agents.remote_a2a_agent import (
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from google.adk.events import Event, EventActions
 
 from agents.front_desk_agent.agent import (
     A2A_DEBUG_TRACE_METADATA_KEY,
@@ -69,6 +70,18 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
 class GuestMessage(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    decision: Literal["approve", "reject"] | None = None
+    proposal_id: str | None = Field(default=None, min_length=1, max_length=200)
+    expand_time_permitted: bool = False
+    alternate_seat_permitted: bool = False
+
+    @model_validator(mode="after")
+    def decision_requires_proposal(self):
+        if bool(self.decision) != bool(self.proposal_id):
+            raise ValueError("承認・拒否には対象提案が必要です")
+        return self
+
     text: str = Field(min_length=1, max_length=2000)
 
     @field_validator("text")
@@ -108,6 +121,9 @@ def _conversation(session) -> list[dict[str, str]]:
 def _pending_proposal(session, messages: list[dict[str, str]]) -> dict[str, str] | None:
     if not session.state.get(PENDING_RESTAURANT_PROPOSAL_KEY):
         return None
+    if session.state.get("restaurant_proposal_summary"):
+        return {"text": session.state["restaurant_proposal_summary"],
+                "proposal_id": session.state[PENDING_RESTAURANT_PROPOSAL_KEY]}
 
     for event in reversed(session.events):
         if event.author != "restaurant_agent":
@@ -443,6 +459,7 @@ async def create_session() -> dict[str, str]:
     session = await session_service.create_session(
         app_name=APP_NAME,
         user_id=USER_ID,
+        state={"restaurant_v2_enabled": True},
     )
     session_locks[session.id] = asyncio.Lock()
     debug_events[session.id] = []
@@ -500,7 +517,15 @@ async def send_message(session_id: str, message: GuestMessage) -> dict:
         raise HTTPException(status_code=409, detail="前のメッセージを処理中です。")
 
     async with lock:
-        await _get_session(session_id)
+        session = await _get_session(session_id)
+        if message.decision and message.proposal_id != session.state.get(PENDING_RESTAURANT_PROPOSAL_KEY):
+            raise HTTPException(status_code=409, detail="対象の予約提案が変わっています。現在の提案を確認してください。")
+        await session_service.append_event(session, Event(author="guest_ui_command", actions=EventActions(state_delta={
+            "restaurant_v2_enabled": True,
+            "restaurant_structured_decision": {"decision":message.decision,"proposal_id":message.proposal_id} if message.decision else None,
+            "restaurant_expand_time_permitted": message.expand_time_permitted,
+            "restaurant_alternate_seat_permitted": message.alternate_seat_permitted,
+        })))
         trace_id = str(uuid4())
         active_trace_ids[session_id] = trace_id
         agent_activity[session_id] = {
@@ -518,7 +543,7 @@ async def send_message(session_id: str, message: GuestMessage) -> dict:
             agent_name="Front Desk",
             summary="ゲストから依頼を受信しました。",
             status="依頼を整理中",
-            payload=message.text,
+            payload="ゲストの依頼を受信しました（照合情報保護のため本文は非表示）。",
         )
         reply = ""
         try:

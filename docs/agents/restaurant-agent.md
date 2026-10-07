@@ -52,3 +52,11 @@ Front Deskはゲスト本人の明示承認を確認してから`approve_change`
 ロックされたADKのRunner.run_async、InMemorySessionService、FunctionTool変換を模擬モデルで実行して確認する。実モデルでの予約相談とFront Desk/UIのE2Eは接続完了後に検証する。
 
 確定時は会話・token・期限・変更元の版・空席を再確認する。競合時は元予約を維持し、再検索候補を返す。確定済み提案の同じ会話・tokenによる再送は同じ結果を返し、拒否済み・競合済み提案を再確定しない。予約更新と提案消費は一体のtransactionで処理する。
+
+## Front Deskとゲスト画面
+
+Guest UIの新しいセッションはversion 2予約相談を利用する。Front Deskは予約条件をRestaurantへ委譲し、Restaurantの追加質問・候補・照合結果をゲストへ返す。予約中の短い条件回答もRestaurantへ渡す。
+
+ゲスト画面の予約案には確認内容を表示し、承認・拒否ボタンはdecisionとproposal_idを送る。Front Deskはサーバー内で保持するtokenを用いて公開A2Aへ構造化操作を送る。自然文の肯定・拒否だけではversion 2予約を更新しない。期限切れ・競合では提案を解除し、元予約を維持した再相談へ進む。
+
+時間範囲と席種を広げる場合は画面の許可チェックを利用する。既定は未許可。照合情報と承認資格を含むRestaurant向け依頼本文は通信デバッグに表示しない。承認tokenはADKの会話stateにも保持しない。

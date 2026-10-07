@@ -161,6 +161,10 @@ class _DepartmentFailureBoundary(BaseAgent):
             )
 
 
+def _text_from_content(content) -> str:
+    return "\n".join(p.text for p in content.parts or [] if p.text) if content else ""
+
+
 def _text_from_event(event: Event) -> str:
     if not event.content or not event.content.parts:
         return ""
@@ -217,52 +221,71 @@ class FrontDeskCoordinator(BaseAgent):
     async def _run_async_impl(
         self, ctx: InvocationContext
     ) -> AsyncGenerator[Event, None]:
-        pending_proposal_id = ctx.session.state.get(PENDING_RESTAURANT_PROPOSAL_KEY)
-        ctx.session.state["restaurant_change_pending"] = (
-            "yes" if pending_proposal_id else "no"
-        )
-        raw_intent: str | None = None
-        async for event in intent_agent.run_async(ctx):
-            yield event
-            if event.author == intent_agent.name and event.is_final_response():
-                raw_intent = _text_from_event(event)
-
-        if not raw_intent:
-            yield self._final_event(
-                ctx,
-                "ご依頼を整理できませんでした。内容をもう一度お知らせください。",
+        from agents.front_desk_agent.restaurant_flow import consultation_call, decision_call, safe_trace
+        command = ctx.session.state.pop("restaurant_structured_decision", None)
+        if command is not None:
+            call = decision_call(ctx.session.id, command)
+            if call is None:
+                yield self._final_event(ctx, "有効な対象提案がありません。現在の提案を確認してください。")
+                return
+            calls = [call]
+        else:
+            pending_proposal_id = ctx.session.state.get(PENDING_RESTAURANT_PROPOSAL_KEY)
+            ctx.session.state["restaurant_change_pending"] = (
+                "yes" if pending_proposal_id else "no"
             )
-            return
+            raw_intent: str | None = None
+            async for event in intent_agent.run_async(ctx):
+                yield event
+                if event.author == intent_agent.name and event.is_final_response():
+                    raw_intent = _text_from_event(event)
 
-        try:
-            intent = validate_intent_output(raw_intent)
-        except ValidationError:
-            yield self._final_event(
-                ctx,
-                "ご依頼を正しく整理できませんでした。対象の内容をもう一度お知らせください。",
-            )
-            return
-
-        if intent.decision in {"approve", "reject"}:
-            if not isinstance(pending_proposal_id, str) or not pending_proposal_id:
+            if not raw_intent:
                 yield self._final_event(
                     ctx,
-                    "有効な変更案が見つかりません。現在の予約変更案を確認してください。",
+                    "ご依頼を整理できませんでした。内容をもう一度お知らせください。",
                 )
                 return
-            calls = [build_approval_call(intent.decision, pending_proposal_id)]
-        elif intent.decision != "dispatch":
-            yield self._final_event(
-                ctx,
-                intent.response_message or "ご依頼の内容をもう少し詳しく教えてください。",
-            )
-            return
 
-        else:
-            calls = build_department_calls(intent)
-        if not calls:
-            yield self._final_event(ctx, "ご依頼に対応する部署を選べませんでした。")
-            return
+            try:
+                intent = validate_intent_output(raw_intent)
+            except ValidationError:
+                yield self._final_event(
+                    ctx,
+                    "ご依頼を正しく整理できませんでした。対象の内容をもう一度お知らせください。",
+                )
+                return
+
+            if intent.decision in {"approve", "reject"}:
+                if not isinstance(pending_proposal_id, str) or not pending_proposal_id:
+                    yield self._final_event(
+                        ctx,
+                        "有効な変更案が見つかりません。現在の予約変更案を確認してください。",
+                    )
+                    return
+                if ctx.session.state.get("restaurant_v2_active"):
+                    yield self._final_event(ctx, "予約の確定・拒否は画面の承認・拒否ボタンから操作してください。")
+                    return
+                calls = [build_approval_call(intent.decision, pending_proposal_id)]
+            elif intent.decision == "clarify" and ctx.session.state.get("restaurant_v2_active"):
+                calls = [consultation_call(ctx.session.id, _text_from_content(ctx.user_content), ctx.session.state)]
+            elif intent.decision != "dispatch":
+                yield self._final_event(
+                    ctx,
+                    intent.response_message or "ご依頼の内容をもう少し詳しく教えてください。",
+                )
+                return
+
+            else:
+                calls = build_department_calls(intent)
+                if any(r.operation == "consult_restaurant" for r in intent.requests) or (
+                    ctx.session.state.get("restaurant_v2_enabled") and any(r.department == "restaurant_agent" for r in intent.requests)):
+                    calls = [c for c in calls if c.name != "restaurant_agent"]
+                    calls.append(consultation_call(ctx.session.id, _text_from_content(ctx.user_content), ctx.session.state))
+                    ctx.session.state["restaurant_v2_active"] = True
+            if not calls:
+                yield self._final_event(ctx, "ご依頼に対応する部署を選べませんでした。")
+                return
 
         remote_agents = [_create_remote_agent(call) for call in calls]
         department_agents = [
@@ -279,6 +302,7 @@ class FrontDeskCoordinator(BaseAgent):
             description="選択した部署Agentへ独立した依頼を同時に送ります。",
             sub_agents=department_agents,
         )
+        reported_failures = set()
         statuses = {call.name: "実行中" for call in calls}
         responses: dict[str, list[str]] = {call.name: [] for call in calls}
         task_ids: dict[str, str] = {}
@@ -293,7 +317,7 @@ class FrontDeskCoordinator(BaseAgent):
                         "agent_id": call.name,
                         "agent_name": call.display_name,
                         "direction": f"Front Desk → {call.display_name}",
-                        "payload": call.request_text,
+                        "payload": safe_trace(call),
                     }
                 },
             )
@@ -302,6 +326,7 @@ class FrontDeskCoordinator(BaseAgent):
                 if event.author in statuses:
                     if event.error_message:
                         statuses[event.author] = "失敗"
+                        reported_failures.add(event.author)
                         task_id = (event.custom_metadata or {}).get(
                             f"{A2A_METADATA_PREFIX}task_id"
                         )
@@ -327,6 +352,10 @@ class FrontDeskCoordinator(BaseAgent):
                     if status:
                         statuses[event.author] = status
                     response_text = _text_from_event(event)
+                    if event.author == "restaurant_agent":
+                        event = event.model_copy(update={"custom_metadata": {
+                            k:v for k,v in (event.custom_metadata or {}).items()
+                            if k in {f"{A2A_METADATA_PREFIX}task_id", "task_status"}}})
                     if event.author == "restaurant_agent" and response_text:
                         response_text, state_delta = self._handle_restaurant_response(
                             ctx, response_text
@@ -335,7 +364,7 @@ class FrontDeskCoordinator(BaseAgent):
                             custom_metadata = {
                                 key: value
                                 for key, value in (event.custom_metadata or {}).items()
-                                if key != f"{A2A_METADATA_PREFIX}response"
+                                if key in {f"{A2A_METADATA_PREFIX}task_id", "task_status"}
                             }
                             if status:
                                 custom_metadata["task_status"] = status
@@ -374,7 +403,7 @@ class FrontDeskCoordinator(BaseAgent):
                 custom_metadata=final_metadata,
                 error_message=(
                     "部署AgentとのA2A通信に失敗しました。"
-                    if statuses[call.name] == "失敗"
+                    if statuses[call.name] == "失敗" and call.name not in reported_failures
                     else None
                 ),
             )
@@ -396,6 +425,38 @@ class FrontDeskCoordinator(BaseAgent):
 
         status = response.get("status")
         message = response.get("message")
+        if status == "proposed" and isinstance(response.get("approval_token"), str):
+            from agents.front_desk_agent.restaurant_flow import credentials
+            proposal_id = response.get("proposal_id")
+            summary = response.get("summary")
+            if not isinstance(proposal_id, str) or not isinstance(summary, str):
+                return "予約提案を確認できませんでした。", {}
+            credentials[ctx.session.id] = (proposal_id, response["approval_token"])
+            ctx.session.state[PENDING_RESTAURANT_PROPOSAL_KEY] = proposal_id
+            ctx.session.state["restaurant_proposal_summary"] = summary
+            ctx.session.state["restaurant_v2_active"] = True
+            return summary + "画面の承認ボタンで確定できます。", {
+                PENDING_RESTAURANT_PROPOSAL_KEY: proposal_id, "restaurant_proposal_summary": summary,
+                "restaurant_v2_active": True}
+        if ctx.session.state.get("restaurant_v2_active"):
+            from agents.front_desk_agent.restaurant_flow import credentials
+            delta = {}
+            if status in {"confirmed", "rejected", "expired", "conflict", "not_found"}:
+                credentials.pop(ctx.session.id, None)
+                ctx.session.state.pop(PENDING_RESTAURANT_PROPOSAL_KEY, None)
+                ctx.session.state.pop("restaurant_proposal_summary", None)
+                delta = {PENDING_RESTAURANT_PROPOSAL_KEY: "", "restaurant_proposal_summary": ""}
+                if status in {"confirmed", "rejected"}:
+                    ctx.session.state["restaurant_v2_active"] = False
+                    delta["restaurant_v2_active"] = False
+            lines = [message] if isinstance(message, str) else []
+            if status == "confirmed":
+                lines.append(f"{response.get('date')} {response.get('time')}、{response.get('party_size')}名、{response.get('seat_type')}、90分利用。窓際は確約できません。")
+            for candidate in response.get("candidates", response.get("reservations", [])):
+                if isinstance(candidate, dict):
+                    lines.append(f"候補: {candidate.get('date')} {candidate.get('time')}、{candidate.get('party_size')}名、{candidate.get('seat_type')}" +
+                                 (f"（予約ID: {candidate['reservation_id']}）" if 'reservation_id' in candidate else ''))
+            return "\n".join(lines) or "希望条件を教えてください。", delta
         if status == "proposed":
             proposal_id = response.get("proposal_id")
             if isinstance(proposal_id, str) and proposal_id:
@@ -420,7 +481,11 @@ class FrontDeskCoordinator(BaseAgent):
         return response_text, state_delta
 
     def _final_event(self, ctx: InvocationContext, message: str) -> Event:
+        state_delta = {key: ctx.session.state.get(key, "") for key in (
+            "restaurant_v2_active", "restaurant_proposal_summary", PENDING_RESTAURANT_PROPOSAL_KEY)}
+        state_delta["restaurant_structured_decision"] = None
         return Event(
+            actions=EventActions(state_delta=state_delta),
             author=self.name,
             invocation_id=ctx.invocation_id,
             branch=ctx.branch,

@@ -21,6 +21,7 @@ Operation = Literal[
     "check_repair",
     "check_alternative_room",
     "propose_reservation_time_change",
+    "consult_restaurant",
 ]
 TIME_PATTERN = r"^(?:[01]\d|2[0-3]):[0-5]\d$"
 
@@ -43,11 +44,11 @@ class DepartmentIntent(BaseModel):
             "housekeeping_agent": "check_alternative_room",
             "restaurant_agent": "propose_reservation_time_change",
         }[self.department]
-        if self.operation != expected:
+        if self.operation != expected and not (self.department == "restaurant_agent" and self.operation == "consult_restaurant"):
             raise ValueError("部署と依頼種別の組み合わせが正しくありません")
 
         if self.department == "restaurant_agent":
-            if self.reservation_time is None:
+            if self.operation != "consult_restaurant" and self.reservation_time is None:
                 raise ValueError("レストラン依頼には現在の予約時刻が必要です")
         elif self.reservation_time is not None or self.requested_time is not None:
             raise ValueError("予約時刻はレストラン依頼だけに指定できます")
@@ -105,7 +106,7 @@ def validate_intent_output(output: str) -> IntentExtractionResult:
     model_result = _ModelIntentExtractionResult.model_validate_json(output)
     normalized = model_result.model_dump()
     if any(
-        request.department == "restaurant_agent" and not request.reservation_time
+        request.department == "restaurant_agent" and request.operation != "consult_restaurant" and not request.reservation_time
         for request in model_result.requests
     ):
         return IntentExtractionResult(
@@ -127,10 +128,16 @@ intent_agent = Agent(
     description="ゲストの依頼を3部署の業務意図へ分類し、確認事項を抽出します。",
     model=LiteLlm(model=MODEL_NAME),
     instruction="""
+追加された予約相談:
+新規予約、席種・人数・日時の相談、予約候補の選択と既存予約の照合はrestaurant_agent / consult_restaurantにdispatchします。
+この場合reservation_timeとrequested_timeは空文字でよく、必要情報が不足していてもRestaurantが確認するため委譲します。
+旧固定シナリオ以外の予約相談にpropose_reservation_time_changeを使いません。
+会話履歴でRestaurantへ相談中なら、時刻・人数・氏名・部屋番号・候補選択だけの返答もconsult_restaurantへdispatchします。
+consult_restaurantは下記の旧固定予約時刻ルールの例外です。新規予約に現在予約時刻を要求しません。
 あなたはホテルFront Deskの依頼分類担当です。ゲストの文章を読み、必ず指定されたJSON出力スキーマで返してください。
 
 JSON形式:
-{"decision":"dispatch|clarify|unsupported|approve|reject","requests":[{"department":"maintenance_agent|housekeeping_agent|restaurant_agent","operation":"check_repair|check_alternative_room|propose_reservation_time_change","details":"依頼内容","reservation_time":"HH:MMまたは空文字","requested_time":"HH:MMまたは空文字"}],"response_message":"確認・対象外の説明または空文字"}
+{"decision":"dispatch|clarify|unsupported|approve|reject","requests":[{"department":"maintenance_agent|housekeeping_agent|restaurant_agent","operation":"check_repair|check_alternative_room|propose_reservation_time_change|consult_restaurant","details":"依頼内容","reservation_time":"HH:MMまたは空文字","requested_time":"HH:MMまたは空文字"}],"response_message":"確認・対象外の説明または空文字"}
 必ず全フィールドを出力します。dispatchではrequestsを1件以上、response_messageを空文字にします。clarify/unsupportedではrequestsを空配列にし、response_messageを具体的な文にします。レストラン以外の予約時刻は空文字にします。
 
 会話状態: この会話で未処理のRestaurant変更案があるかは {restaurant_change_pending} です。

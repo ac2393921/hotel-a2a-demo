@@ -58,7 +58,7 @@
           <div class="proposal-heading">
             <span class="proposal-icon" aria-hidden="true">↗</span>
             <div>
-              <h3 id="proposal-title">レストランの変更案</h3>
+              <h3 id="proposal-title">レストランの予約案</h3>
               <p class="proposal-state"><span class="state-dot" aria-hidden="true"></span>承認待ち・未確定</p>
             </div>
           </div>
@@ -76,7 +76,12 @@
 
         <p id="error-message" class="error-message" role="alert" hidden></p>
         <div class="composer-wrap">
-          <form id="message-form" class="composer">
+          <fieldset class="reservation-options">
+          <legend>予約候補を広げる許可</legend>
+          <label><input type="checkbox" id="expand-time-permitted"> 同じランチ・ディナー枠の全時間も探す</label>
+          <label><input type="checkbox" id="alternate-seat-permitted"> 別の席種も探す</label>
+        </fieldset>
+        <form id="message-form" class="composer">
             <label class="visually-hidden" for="message-input">メッセージ</label>
             <textarea id="message-input" name="message" rows="2" maxlength="2000" placeholder="メッセージを入力…" required></textarea>
             <button id="send-button" class="send-button" type="submit" aria-label="メッセージを送信">
