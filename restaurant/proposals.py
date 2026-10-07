@@ -77,7 +77,7 @@ class ProposalService:
             proposal = self.repository.get_proposal(proposal_id)
             if (proposal is None or proposal.conversation_id != conversation_id
                     or not isinstance(approval_token, str)
-                    or not secrets.compare_digest(proposal.approval_token, approval_token)):
+                    or not secrets.compare_digest(proposal.approval_token.encode(), approval_token.encode())):
                 return {'status': 'not_found', 'message': '対象の提案がありません。'}
             if proposal.status == ProposalStatus.REJECTED:
                 return {'status': 'rejected', 'message': '提案を取り下げました。予約は変更していません。'}

@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from restaurant.availability import AvailabilityService
 from restaurant.memory import HotelClock, demo_repository
 from restaurant.proposals import ProposalService
+from restaurant.confirmation import ConfirmationService
 from agents.restaurant_agent.tools import ReservationTools
 
 
@@ -24,11 +25,21 @@ class ConsultationService:
         self.repository = repository or demo_repository(self.clock)
         self.availability = AvailabilityService(self.repository, self.clock)
         self.proposals = ProposalService(self.repository, self.clock)
+        self.confirmation = ConfirmationService(self.repository, self.clock)
         self.model = model
         self._conversations = {}
         self._locks = {}
 
     async def handle(self, payload: dict) -> dict:
+        if payload.get('action') in {'confirm_proposal', 'reject_proposal'}:
+            if (set(payload) != {'version', 'action', 'conversation_id', 'proposal_id', 'approval_token'}
+                    or type(payload.get('version')) is not int or payload['version'] != 2
+                    or any(not isinstance(payload.get(k), str) or not 1 <= len(payload[k]) <= 200
+                           for k in ['conversation_id', 'proposal_id', 'approval_token'])):
+                return {'status': 'invalid_request', 'message': '承認・拒否の依頼形式を確認してください。'}
+            if payload['action'] == 'confirm_proposal':
+                return await self.confirmation.confirm(payload['conversation_id'], payload['proposal_id'], payload['approval_token'])
+            return await self.proposals.reject(payload['conversation_id'], payload['proposal_id'], payload['approval_token'])
         allowed = {'version', 'action', 'conversation_id', 'message', 'expand_time_permitted', 'alternate_seat_permitted'}
         if (set(payload) - allowed or type(payload.get('version')) is not int or payload['version'] != 2
                 or payload.get('action') != 'consult'
