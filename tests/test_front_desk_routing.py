@@ -183,7 +183,7 @@ class FrontDeskCoordinatorTests(unittest.IsolatedAsyncioTestCase):
             }[call.name]
             return FakeRemoteAgent(call.name, answer)
 
-        ctx = SimpleNamespace(invocation_id="invocation-1", branch="main")
+        ctx = SimpleNamespace(invocation_id="invocation-1", branch="main", state={})
         with (
             patch.object(
                 front_desk,
@@ -243,7 +243,7 @@ class FrontDeskCoordinatorTests(unittest.IsolatedAsyncioTestCase):
                 finish_reason=types.FinishReason.STOP,
             )
 
-        ctx = SimpleNamespace(invocation_id="invocation-1", branch="main")
+        ctx = SimpleNamespace(invocation_id="invocation-1", branch="main", state={})
         with (
             patch.object(
                 front_desk,
