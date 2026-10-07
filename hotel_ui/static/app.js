@@ -100,7 +100,7 @@ function createAgentCard(agent) {
   const heading = document.createElement("div");
   heading.className = "agent-card-heading";
   const name = document.createElement("h3");
-  name.textContent = agent.name || agent.label;
+  name.textContent = agent.label;
   const availability = document.createElement("span");
   availability.className = `agent-availability${agent.available ? " is-available" : ""}`;
   availability.textContent = agent.available ? "接続中" : "未接続";
@@ -122,9 +122,12 @@ function createAgentCard(agent) {
     const skillList = document.createElement("ul");
     skillList.className = "agent-skills";
     for (const skill of agent.skills) {
+      if (skill.name === "custom" && skill.description === agent.description) {
+        continue;
+      }
       const item = document.createElement("li");
       const skillName = document.createElement("strong");
-      skillName.textContent = skill.name;
+      skillName.textContent = skill.name === "custom" ? "担当できること" : skill.name;
       const skillDescription = document.createElement("span");
       skillDescription.textContent = skill.description;
       item.append(skillName, skillDescription);

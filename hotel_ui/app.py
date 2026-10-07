@@ -103,11 +103,19 @@ def _pending_proposal(session, messages: list[dict[str, str]]) -> dict[str, str]
     if not session.state.get(PENDING_RESTAURANT_PROPOSAL_KEY):
         return None
 
+    for event in reversed(session.events):
+        if event.author != "restaurant_agent":
+            continue
+        text = _event_text(event)
+        if "変更案" in text or "予約はまだ変更していません" in text:
+            return {"text": text}
+
     for message in reversed(messages):
-        if message["role"] == "assistant" and (
-            "変更案" in message["text"] or "予約はまだ変更していません" in message["text"]
-        ):
-            return {"text": message["text"]}
+        if message["role"] != "assistant":
+            continue
+        for line in message["text"].splitlines():
+            if line.startswith("- Restaurant Agent ") and "変更案" in line:
+                return {"text": line.rsplit(": ", maxsplit=1)[-1]}
     return {"text": "レストランの変更案が承認待ちです。"}
 
 
