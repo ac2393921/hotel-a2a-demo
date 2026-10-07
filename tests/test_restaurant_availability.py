@@ -49,3 +49,16 @@ class AvailabilityTests(unittest.TestCase):
         self.assertEqual(starts, ['20:00','20:30','17:00'])
         self.assertEqual(len(starts), len(set(starts)))
         self.assertTrue(all(c.start.date() == self.conditions().start.date() for c in result.candidates))
+
+    def test_does_not_change_seat_without_explicit_input(self):
+        repo = InMemoryRepository([t for t in self.repo.tables() if t.seat_type == SeatType.TABLE])
+        service = AvailabilityService(repo, self.clock)
+        self.assertEqual(service.search(self.conditions()).status, 'unavailable')
+        result = service.search(self.conditions(), alternate_seat=SeatType.TABLE)
+        self.assertTrue(result.requested_available)
+        self.assertEqual(result.candidates[0].seat_type, SeatType.TABLE)
+
+    def test_default_search_never_expands_beyond_sixty_minutes(self):
+        result = self.service.search(self.conditions(19,30))
+        self.assertEqual([c.start.strftime('%H:%M') for c in result.candidates], ['20:00', '20:30'])
+        self.assertTrue(all(abs(c.start - self.conditions(19,30).start) <= timedelta(minutes=60) for c in result.candidates))
