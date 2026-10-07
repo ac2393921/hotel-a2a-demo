@@ -1,5 +1,5 @@
 """通信と保存に依存しない予約ルール。"""
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import StrEnum
 
@@ -56,8 +56,8 @@ class BookingConditions:
 
 @dataclass(frozen=True)
 class Guest:
-    room_number: str
-    name: str
+    room_number: str = field(repr=False)
+    name: str = field(repr=False)
 
     def __post_init__(self):
         if not isinstance(self.room_number, str) or not 1 <= len(self.room_number.strip()) <= 20:
@@ -86,7 +86,7 @@ class ProposalStatus(StrEnum):
 class Proposal:
     id: str
     conversation_id: str
-    approval_token: str
+    approval_token: str = field(repr=False)
     guest: Guest
     conditions: BookingConditions
     created_at: datetime
