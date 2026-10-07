@@ -26,6 +26,7 @@ from agents.front_desk_agent.intent import (
 
 PROPOSED_RESTAURANT_TIME = "20:00"
 PENDING_RESTAURANT_PROPOSAL_KEY = "front_desk_pending_restaurant_proposal_id"
+A2A_DEBUG_TRACE_METADATA_KEY = "hotel_a2a_debug_trace"
 
 
 @dataclass(frozen=True)
@@ -281,6 +282,21 @@ class FrontDeskCoordinator(BaseAgent):
         statuses = {call.name: "実行中" for call in calls}
         responses: dict[str, list[str]] = {call.name: [] for call in calls}
         task_ids: dict[str, str] = {}
+        for call in calls:
+            yield Event(
+                author=self.name,
+                invocation_id=ctx.invocation_id,
+                branch=ctx.branch,
+                custom_metadata={
+                    A2A_DEBUG_TRACE_METADATA_KEY: {
+                        "kind": "request_sent",
+                        "agent_id": call.name,
+                        "agent_name": call.display_name,
+                        "direction": f"Front Desk → {call.display_name}",
+                        "payload": call.request_text,
+                    }
+                },
+            )
         try:
             async for event in parallel.run_async(ctx):
                 if event.author in statuses:

@@ -6,6 +6,7 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal
+from uuid import uuid4
 
 import httpx
 from fastapi import FastAPI, HTTPException
@@ -21,6 +22,7 @@ from google.genai import types
 from pydantic import BaseModel, Field, field_validator
 
 from agents.front_desk_agent.agent import (
+    A2A_DEBUG_TRACE_METADATA_KEY,
     PENDING_RESTAURANT_PROPOSAL_KEY,
     root_agent,
 )
@@ -57,6 +59,10 @@ runner = Runner(
     session_service=session_service,
 )
 session_locks: dict[str, asyncio.Lock] = {}
+debug_events: dict[str, list[dict[str, object]]] = {}
+agent_activity: dict[str, dict[str, dict[str, object]]] = {}
+active_trace_ids: dict[str, str] = {}
+MAX_DEBUG_EVENTS = 300
 
 app = FastAPI(title="Hotel A2A Guest UI")
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
@@ -161,6 +167,140 @@ def _stored_task_state(value: object) -> str | None:
     }:
         return "対応中" if value == "実行中" else value
     return "失敗" if value == "failed" else None
+
+
+def _debug_timestamp(event: object | None = None) -> str:
+    timestamp = getattr(event, "timestamp", None)
+    if isinstance(timestamp, (int, float)):
+        return datetime.fromtimestamp(timestamp, timezone.utc).isoformat()
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _append_debug_event(
+    session_id: str,
+    *,
+    kind: str,
+    direction: str,
+    agent_id: str,
+    agent_name: str,
+    summary: str,
+    status: str,
+    task_id: str | None = None,
+    payload: str | None = None,
+    timestamp: str | None = None,
+) -> None:
+    events = debug_events.setdefault(session_id, [])
+    trace_id = active_trace_ids.get(session_id)
+    if any(
+        previous.get("trace_id") == trace_id
+        and previous.get("kind") == kind
+        and previous.get("agent_id") == agent_id
+        and previous.get("task_id") == task_id
+        and previous.get("status") == status
+        and previous.get("summary") == summary[:2000]
+        for previous in reversed(events)
+    ):
+        return
+    entry: dict[str, object] = {
+        "id": str(uuid4()),
+        "trace_id": trace_id,
+        "timestamp": timestamp or _debug_timestamp(),
+        "kind": kind,
+        "direction": direction,
+        "agent_id": agent_id,
+        "agent_name": agent_name,
+        "summary": summary[:2000],
+        "status": status,
+        "task_id": task_id,
+    }
+    if payload:
+        entry["payload"] = payload[:2000]
+    events.append(entry)
+    del events[:-MAX_DEBUG_EVENTS]
+
+    if agent_id:
+        agent_activity.setdefault(session_id, {})[agent_id] = {
+            "status": status,
+            "task_id": task_id,
+            "updated_at": entry["timestamp"],
+        }
+
+
+def _record_debug_event(session_id: str, event: object) -> None:
+    metadata = getattr(event, "custom_metadata", None) or {}
+    trace = metadata.get(A2A_DEBUG_TRACE_METADATA_KEY)
+    if isinstance(trace, dict):
+        agent_id = trace.get("agent_id")
+        agent_name = trace.get("agent_name")
+        direction = trace.get("direction")
+        payload = trace.get("payload")
+        if all(isinstance(value, str) for value in (agent_id, agent_name, direction)):
+            _append_debug_event(
+                session_id,
+                kind="request_sent",
+                direction=direction,
+                agent_id=agent_id,
+                agent_name=agent_name,
+                summary="A2A Taskを送信しました。",
+                status="依頼送信済み",
+                payload=payload if isinstance(payload, str) else None,
+                timestamp=_debug_timestamp(event),
+            )
+            agent_activity.setdefault(session_id, {})["front_desk_agent"] = {
+                "status": "部署Agentへ委譲中",
+                "task_id": None,
+                "updated_at": _debug_timestamp(event),
+            }
+        return
+
+    author = getattr(event, "author", "")
+    agent = next((item for item in AGENTS if item["id"] == author), None)
+    if agent is None:
+        if author == root_agent.name and getattr(event, "content", None):
+            text = _event_text(event)
+            if text:
+                _append_debug_event(
+                    session_id,
+                    kind="guest_reply",
+                    direction="Front Desk → Guest",
+                    agent_id="front_desk_agent",
+                    agent_name="Front Desk",
+                    summary=text,
+                    status="応答完了",
+                    timestamp=_debug_timestamp(event),
+                )
+                agent_activity.setdefault(session_id, {})["front_desk_agent"] = {
+                    "status": "応答完了",
+                    "task_id": None,
+                    "updated_at": _debug_timestamp(event),
+                }
+        return
+
+    task_id = metadata.get(f"{A2A_METADATA_PREFIX}task_id")
+    task_id = task_id if isinstance(task_id, str) else None
+    status = "失敗" if getattr(event, "error_message", None) else (
+        _task_state(metadata.get(f"{A2A_METADATA_PREFIX}response"))
+        or _stored_task_state(metadata.get("task_status"))
+        or "応答受信"
+    )
+    text = _event_text(event)
+    kind = "response_received" if text else "task_update"
+    summary = text or (
+        "部署AgentとのA2A通信に失敗しました。"
+        if status == "失敗"
+        else f"Task状態: {status}"
+    )
+    _append_debug_event(
+        session_id,
+        kind=kind,
+        direction=f"{agent['label']} → Front Desk",
+        agent_id=agent["id"],
+        agent_name=agent["label"],
+        summary=summary,
+        status=status,
+        task_id=task_id,
+        timestamp=_debug_timestamp(event),
+    )
 
 
 def _task_timeline(session) -> list[dict[str, object]]:
@@ -304,6 +444,14 @@ async def create_session() -> dict[str, str]:
         user_id=USER_ID,
     )
     session_locks[session.id] = asyncio.Lock()
+    debug_events[session.id] = []
+    agent_activity[session.id] = {
+        "front_desk_agent": {
+            "status": "待機中",
+            "task_id": None,
+            "updated_at": None,
+        }
+    }
     return {"session_id": session.id}
 
 
@@ -326,6 +474,18 @@ async def get_conversation(session_id: str) -> dict:
         "messages": messages,
         "pending_proposal": _pending_proposal(session, messages),
         "tasks": _task_timeline(session),
+        "debug_events": debug_events.get(session_id, []),
+        "agent_activity": agent_activity.get(session_id, {}),
+    }
+
+
+@app.get("/api/sessions/{session_id}/debug")
+async def get_debug_state(session_id: str) -> dict:
+    session = await _get_session(session_id)
+    return {
+        "tasks": _task_timeline(session),
+        "debug_events": debug_events.get(session_id, []),
+        "agent_activity": agent_activity.get(session_id, {}),
     }
 
 
@@ -340,6 +500,25 @@ async def send_message(session_id: str, message: GuestMessage) -> dict:
 
     async with lock:
         await _get_session(session_id)
+        trace_id = str(uuid4())
+        active_trace_ids[session_id] = trace_id
+        agent_activity[session_id] = {
+            "front_desk_agent": {
+                "status": "依頼を整理中",
+                "task_id": None,
+                "updated_at": _debug_timestamp(),
+            }
+        }
+        _append_debug_event(
+            session_id,
+            kind="guest_request",
+            direction="Guest → Front Desk",
+            agent_id="front_desk_agent",
+            agent_name="Front Desk",
+            summary="ゲストから依頼を受信しました。",
+            status="依頼を整理中",
+            payload=message.text,
+        )
         reply = ""
         try:
             async for event in runner.run_async(
@@ -347,21 +526,50 @@ async def send_message(session_id: str, message: GuestMessage) -> dict:
                 session_id=session_id,
                 new_message=types.Content(
                     role="user",
-                    parts=[types.Part.from_text(text=message.text)],
+                parts=[types.Part.from_text(text=message.text)],
                 ),
             ):
+                _record_debug_event(session_id, event)
                 if event.author == root_agent.name and event.content:
                     reply = _event_text(event)
         except asyncio.CancelledError:
             raise
         except Exception as error:
             logger.error("Front Desk execution failed: %s", type(error).__name__)
+            _append_debug_event(
+                session_id,
+                kind="execution_failed",
+                direction="Front Desk → Guest",
+                agent_id="front_desk_agent",
+                agent_name="Front Desk",
+                summary="Front Desk Agentの処理に失敗しました。",
+                status="失敗",
+            )
+            agent_activity.setdefault(session_id, {})["front_desk_agent"] = {
+                "status": "失敗",
+                "task_id": None,
+                "updated_at": _debug_timestamp(),
+            }
             raise HTTPException(
                 status_code=502,
                 detail="Front Desk Agentから応答を受け取れませんでした。",
             ) from error
 
         if not reply:
+            _append_debug_event(
+                session_id,
+                kind="execution_failed",
+                direction="Front Desk → Guest",
+                agent_id="front_desk_agent",
+                agent_name="Front Desk",
+                summary="Front Desk Agentから回答を受け取れませんでした。",
+                status="失敗",
+            )
+            agent_activity.setdefault(session_id, {})["front_desk_agent"] = {
+                "status": "失敗",
+                "task_id": None,
+                "updated_at": _debug_timestamp(),
+            }
             raise HTTPException(
                 status_code=502,
                 detail="Front Desk Agentから応答を受け取れませんでした。",
@@ -373,4 +581,6 @@ async def send_message(session_id: str, message: GuestMessage) -> dict:
             "reply": reply,
             "pending_proposal": _pending_proposal(session, messages),
             "tasks": _task_timeline(session),
+            "debug_events": debug_events.get(session_id, []),
+            "agent_activity": agent_activity.get(session_id, {}),
         }

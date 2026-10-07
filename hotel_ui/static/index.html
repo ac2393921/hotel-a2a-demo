@@ -39,7 +39,7 @@
           <div class="front-desk-avatar" aria-hidden="true">F</div>
           <div>
             <h2>フロントデスク</h2>
-            <p>ご相談を承ります</p>
+            <p id="front-desk-activity" class="activity-label">待機中</p>
           </div>
         </div>
 
@@ -106,6 +106,14 @@
           <div id="task-timeline" class="task-timeline"></div>
           <p id="partial-failure" class="partial-failure" role="status" hidden></p>
         </section>
+        <details id="debug-panel" class="debug-panel">
+          <summary>
+            <span>通信デバッグログ</span>
+            <span id="debug-count" class="debug-count">0</span>
+          </summary>
+          <p id="debug-empty" class="debug-empty">依頼を送ると、A2A通信の送受信内容を表示します。</p>
+          <ol id="debug-log" class="debug-log" role="log" aria-live="polite" aria-label="A2A通信ログ"></ol>
+        </details>
       </aside>
       </div>
 
