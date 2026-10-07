@@ -2,9 +2,10 @@
 import asyncio
 import unittest
 from dataclasses import replace
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from restaurant.memory import demo_repository
+from restaurant.domain import Proposal
 
 
 class FixedClock:
@@ -51,3 +52,20 @@ class MemoryTests(unittest.IsolatedAsyncioTestCase):
                 self.repo.save_reservation(replace(original, version=2))
                 raise asyncio.CancelledError()
         self.assertEqual(self.repo.get_reservation(original.id), original)
+
+    async def test_proposals_rollback_with_reservations(self):
+        original = self.repo.get_reservation('demo-dinner')
+        now = FixedClock().now()
+        proposal = Proposal('p', 'conversation', '架空token', original.guest,
+                            original.conditions, now, now + timedelta(minutes=10))
+        with self.assertRaises(ValueError):
+            async with self.repo.transaction():
+                self.repo.save_reservation(replace(original, version=2))
+                self.repo.save_proposal(proposal)
+                raise ValueError('模擬失敗')
+        self.assertIsNone(self.repo.get_proposal('p'))
+        self.assertEqual(self.repo.get_reservation(original.id), original)
+        async with self.repo.transaction():
+            self.repo.save_proposal(proposal)
+        self.assertEqual(self.repo.get_proposal('p'), proposal)
+        self.assertIsNone(demo_repository(FixedClock()).get_proposal('p'))
