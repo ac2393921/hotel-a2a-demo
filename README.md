@@ -35,27 +35,23 @@ uv run python scripts/check_ollama.py
 
 ## 起動
 
-リポジトリのルートで、次の5つを**それぞれ別のターミナル**で実行します。
+Ollamaを起動した状態で、リポジトリのルートから次を実行します。4つのA2Aサービスとゲスト向けWeb UIが起動します。
 
-| ターミナル | サービス | コマンド |
-| --- | --- | --- |
-| 1 | Maintenance Agent | `uv run uvicorn agents.maintenance_agent.agent:a2a_app --host 127.0.0.1 --port 8001` |
-| 2 | Housekeeping Agent | `uv run uvicorn agents.housekeeping_agent.agent:a2a_app --host 127.0.0.1 --port 8002` |
-| 3 | Restaurant Agent | `uv run uvicorn agents.restaurant_agent.agent:a2a_app --host 127.0.0.1 --port 8003` |
-| 4 | Front Desk A2Aサービス | `uv run uvicorn agents.front_desk_agent.agent:a2a_app --host 127.0.0.1 --port 8004` |
-| 5 | ADK Web | `PYTHONPATH=. uv run adk web agents/front_desk_agent --host 127.0.0.1 --port 8000` |
-
-ADK Webを開きます。
-
-```text
-http://127.0.0.1:8000
+```sh
+./scripts/start_demo.sh
 ```
 
-ADK WebはFront Desk Agentを読み込み、ゲストとの会話を処理します。Front Desk A2Aサービス（8004）はAgent Cardを公開する独立サービスです。ポート8000が使われている場合は、ADK Webのコマンドの`--port 8000`を空いているポート（例: `--port 8010`）に変更してください。
+起動後、表示されたURL（既定値は`http://127.0.0.1:8000`）を開きます。ゲストの会話はUIからFront Desk Agentへ送られ、部署Agentとの連携はA2Aサービス経由で行われます。Front Desk A2Aサービス（8004）はAgent Cardを公開します。UIポートを変更する場合は`GUEST_UI_PORT`を指定します。
+
+```sh
+GUEST_UI_PORT=8010 ./scripts/start_demo.sh
+```
+
+起動ログは同じターミナルに表示されます。終了時は`Ctrl+C`を押すと、このスクリプトが起動したサービスをまとめて停止します。
 
 ## デモシナリオ
 
-ADK Webで、たとえば次のように入力します。
+ゲスト向けWeb UIで、たとえば次のように入力します。
 
 ```text
 部屋のエアコンが壊れていて、19時からレストランも予約しています
@@ -74,11 +70,11 @@ curl --fail http://localhost:8003/.well-known/agent-card.json
 curl --fail http://localhost:8004/.well-known/agent-card.json
 ```
 
-終了するときは、起動した各ターミナルで`Ctrl+C`を押します。サーバーはローカル開発用です。`127.0.0.1`にバインドし、外部ネットワークへ公開しないでください。
+サーバーはローカル開発用です。`127.0.0.1`にバインドし、外部ネットワークへ公開しないでください。
 
 ## E2Eシナリオ
 
-4つのAgentサービスとOllamaを起動した状態で実行します。
+Ollamaと一括起動スクリプトを起動した状態で、別ターミナルから実行します。
 
 ```sh
 uv run python -m scripts.e2e_demo

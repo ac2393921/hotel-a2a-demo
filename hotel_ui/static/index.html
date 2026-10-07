@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f5f3ef" />
+    <title>Hotel A2A Demo | ゲストサポート</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Hotel A2A Demo ホーム">
+        <span class="brand-mark" aria-hidden="true">H</span>
+        <span class="brand-copy">
+          <span class="brand-name">HOTEL A2A</span>
+          <span class="brand-caption">GUEST SUPPORT DEMO</span>
+        </span>
+      </a>
+      <div class="environment-label">
+        <span class="status-dot" aria-hidden="true"></span>
+        ローカルデモ
+      </div>
+    </header>
+
+    <main class="page-shell">
+      <section class="welcome-block" aria-labelledby="page-title">
+        <p class="eyebrow">FRONT DESK</p>
+        <h1 id="page-title">どのようなご用件でしょうか。</h1>
+        <p class="welcome-copy">
+          お困りごとをお聞かせください。担当部署に確認してご案内します。
+        </p>
+      </section>
+
+      <section class="conversation-card" aria-label="Front Deskとの会話">
+        <div class="conversation-heading">
+          <div class="front-desk-avatar" aria-hidden="true">F</div>
+          <div>
+            <h2>フロントデスク</h2>
+            <p>ご相談を承ります</p>
+          </div>
+        </div>
+
+        <div id="conversation" class="conversation" role="log" aria-live="polite" aria-relevant="additions text" aria-label="会話履歴">
+          <div id="empty-state" class="empty-state">
+            <span class="empty-icon" aria-hidden="true">✳</span>
+            <p>ご相談内容を入力してください。</p>
+            <button id="example-button" class="example-button" type="button">
+              代表シナリオを入力
+            </button>
+          </div>
+          <div id="messages" class="message-list"></div>
+        </div>
+
+        <section id="proposal-card" class="proposal-card" aria-labelledby="proposal-title" hidden>
+          <div class="proposal-heading">
+            <span class="proposal-icon" aria-hidden="true">↗</span>
+            <div>
+              <h3 id="proposal-title">レストランの変更案</h3>
+              <p class="proposal-state"><span class="state-dot" aria-hidden="true"></span>承認待ち・未確定</p>
+            </div>
+          </div>
+          <p id="proposal-text" class="proposal-text"></p>
+          <div class="proposal-actions">
+            <button id="approve-button" class="button button-primary" type="button">
+              変更案を承認
+            </button>
+            <button id="reject-button" class="button button-secondary" type="button">
+              提案を拒否
+            </button>
+          </div>
+          <p class="proposal-note">承認後、Restaurant Agentからの確定結果をお知らせします。</p>
+        </section>
+
+        <p id="error-message" class="error-message" role="alert" hidden></p>
+        <div class="composer-wrap">
+          <form id="message-form" class="composer">
+            <label class="visually-hidden" for="message-input">メッセージ</label>
+            <textarea id="message-input" name="message" rows="2" maxlength="2000" placeholder="メッセージを入力…" required></textarea>
+            <button id="send-button" class="send-button" type="submit" aria-label="メッセージを送信">
+              <span>送信</span>
+              <span aria-hidden="true">↑</span>
+            </button>
+          </form>
+          <p class="composer-hint">Enterで送信・Shift + Enterで改行</p>
+        </div>
+      </section>
+
+      <aside class="privacy-note" aria-label="デモについて">
+        <span class="privacy-icon" aria-hidden="true">◇</span>
+        <p>この画面はローカルデモです。入力には架空の情報を使用してください。</p>
+      </aside>
+      <p id="live-status" class="visually-hidden" role="status" aria-live="polite"></p>
+    </main>
+  </body>
+</html>
