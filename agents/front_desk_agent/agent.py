@@ -230,6 +230,7 @@ class FrontDeskCoordinator(BaseAgent):
                 return
             calls = [call]
         else:
+            ctx.session.state["restaurant_v2_mode"] = "yes" if ctx.session.state.get("restaurant_v2_enabled") else "no"
             pending_proposal_id = ctx.session.state.get(PENDING_RESTAURANT_PROPOSAL_KEY)
             ctx.session.state["restaurant_change_pending"] = (
                 "yes" if pending_proposal_id else "no"
@@ -450,11 +451,12 @@ class FrontDeskCoordinator(BaseAgent):
                     ctx.session.state["restaurant_v2_active"] = False
                     delta["restaurant_v2_active"] = False
             lines = [message] if isinstance(message, str) else []
+            seat_labels = {"table": "通常テーブル", "private": "個室"}
             if status == "confirmed":
-                lines.append(f"{response.get('date')} {response.get('time')}、{response.get('party_size')}名、{response.get('seat_type')}、90分利用。窓際は確約できません。")
+                lines.append(f"{response.get('date')} {response.get('time')}、{response.get('party_size')}名、{seat_labels.get(response.get('seat_type'), '席種未確認')}、90分利用。窓際は確約できません。")
             for candidate in response.get("candidates", response.get("reservations", [])):
                 if isinstance(candidate, dict):
-                    lines.append(f"候補: {candidate.get('date')} {candidate.get('time')}、{candidate.get('party_size')}名、{candidate.get('seat_type')}" +
+                    lines.append(f"候補: {candidate.get('date')} {candidate.get('time')}、{candidate.get('party_size')}名、{seat_labels.get(candidate.get('seat_type'), '席種未確認')}" +
                                  (f"（予約ID: {candidate['reservation_id']}）" if 'reservation_id' in candidate else ''))
             return "\n".join(lines) or "希望条件を教えてください。", delta
         if status == "proposed":
