@@ -18,7 +18,7 @@ APP_NAME = "front_desk_agent"
 USER_ID = "local_guest"
 SCENARIO = "部屋のエアコンが壊れていて、19時からレストランも予約しています"
 FAILURE_SCENARIO = "エアコンの故障で修理可否と代替部屋を確認してください"
-RESTAURANT_URL = "http://localhost:8003"
+RESTAURANT_URL = os.getenv("RESTAURANT_AGENT_BASE_URL", "http://localhost:8003")
 PENDING_PROPOSAL_KEY = "front_desk_pending_restaurant_proposal_id"
 
 
