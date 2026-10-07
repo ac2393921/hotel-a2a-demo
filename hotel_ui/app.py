@@ -234,7 +234,8 @@ def _record_debug_event(session_id: str, event: object) -> None:
         agent_name = trace.get("agent_name")
         direction = trace.get("direction")
         payload = trace.get("payload")
-        if all(isinstance(value, str) for value in (agent_id, agent_name, direction)):
+        trace_fields = (agent_id, agent_name, direction)
+        if all(isinstance(value, str) for value in trace_fields):
             _append_debug_event(
                 session_id,
                 kind="request_sent",
@@ -526,7 +527,7 @@ async def send_message(session_id: str, message: GuestMessage) -> dict:
                 session_id=session_id,
                 new_message=types.Content(
                     role="user",
-                parts=[types.Part.from_text(text=message.text)],
+                    parts=[types.Part.from_text(text=message.text)],
                 ),
             ):
                 _record_debug_event(session_id, event)
