@@ -321,6 +321,8 @@ class FrontDeskCoordinator(BaseAgent):
                                 for key, value in (event.custom_metadata or {}).items()
                                 if key != f"{A2A_METADATA_PREFIX}response"
                             }
+                            if status:
+                                custom_metadata["task_status"] = status
                             event = event.model_copy(
                                 update={
                                     "content": types.Content(
@@ -345,6 +347,21 @@ class FrontDeskCoordinator(BaseAgent):
         for call in calls:
             if statuses[call.name] == "実行中":
                 statuses[call.name] = "完了" if responses[call.name] else "失敗"
+            final_metadata = {"task_status": statuses[call.name]}
+            task_id = task_ids.get(call.name)
+            if task_id:
+                final_metadata[f"{A2A_METADATA_PREFIX}task_id"] = task_id
+            yield Event(
+                author=call.name,
+                invocation_id=ctx.invocation_id,
+                branch=ctx.branch,
+                custom_metadata=final_metadata,
+                error_message=(
+                    "部署AgentとのA2A通信に失敗しました。"
+                    if statuses[call.name] == "失敗"
+                    else None
+                ),
+            )
         yield self._final_event(
             ctx,
             _response_summary(calls, statuses, responses, task_ids),

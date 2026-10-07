@@ -32,6 +32,7 @@
         </p>
       </section>
 
+      <div class="workspace-grid">
       <section class="conversation-card" aria-label="Front Deskとの会話">
         <div class="conversation-heading">
           <div class="front-desk-avatar" aria-hidden="true">F</div>
@@ -85,6 +86,27 @@
           <p class="composer-hint">Enterで送信・Shift + Enterで改行</p>
         </div>
       </section>
+
+      <aside class="agent-panel" aria-labelledby="agent-panel-title">
+        <div class="agent-panel-heading">
+          <div>
+            <p class="eyebrow">DEPARTMENTS</p>
+            <h2 id="agent-panel-title">部署Agent</h2>
+          </div>
+          <span id="agent-load-status" class="agent-load-status" role="status" aria-live="polite">能力情報を読み込み中</span>
+        </div>
+        <div id="agent-list" class="agent-list"></div>
+        <section class="timeline-section" aria-labelledby="timeline-title">
+          <div class="timeline-heading">
+            <h3 id="timeline-title">Taskタイムライン</h3>
+            <span id="task-count" class="task-count">0</span>
+          </div>
+          <p id="timeline-empty" class="timeline-empty">依頼を送ると、受信したTask状態を表示します。</p>
+          <div id="task-timeline" class="task-timeline"></div>
+          <p id="partial-failure" class="partial-failure" role="status" hidden></p>
+        </section>
+      </aside>
+      </div>
 
       <aside class="privacy-note" aria-label="デモについて">
         <span class="privacy-icon" aria-hidden="true">◇</span>
