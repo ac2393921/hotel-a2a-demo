@@ -93,7 +93,7 @@ class FakeParallelAgent:
 
     async def run_async(self, ctx):
         async def collect(agent):
-            return [event async for event in agent.run_async(ctx)]
+            return [event async for event in agent._run_async_impl(ctx)]
 
         results = await asyncio.gather(
             *(collect(agent) for agent in self.sub_agents)
