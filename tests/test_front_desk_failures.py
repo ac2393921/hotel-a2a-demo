@@ -96,7 +96,9 @@ class FrontDeskPartialFailureTests(unittest.IsolatedAsyncioTestCase):
         self,
     ) -> None:
         ctx = SimpleNamespace(
-            invocation_id="invocation-1", branch="main", state={}
+            invocation_id="invocation-1",
+            branch="main",
+            session=SimpleNamespace(state={}),
         )
 
         def create_remote(call):

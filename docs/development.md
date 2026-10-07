@@ -66,6 +66,16 @@ curl --fail http://localhost:8004/.well-known/agent-card.json
 
 ADK Webは起動ログに表示されるローカルURLへアクセスします。各Agentを個別に起動できるため、障害時は該当するターミナルのログを確認できます。
 
+## E2Eシナリオ
+
+4つのAgentサービスとOllamaが起動した状態で実行します。
+
+```sh
+uv run python -m scripts.e2e_demo
+```
+
+このシナリオは、3部署への委譲、同じ会話での20時への承認、Maintenance Agentへの接続を失敗させた場合の部分回答を順に確認します。予約状態はRestaurant Agentのプロセス内メモリにあるため、開始時刻が19時でない場合はRestaurant Agentを再起動してから実行してください。障害確認ではMaintenance Agentの停止状態をポート8799への接続失敗で再現し、実際のサービスプロセスには触れません。
+
 ## 参考資料
 
 - [ADK公式: A2A Agentの公開](https://adk.dev/a2a/quickstart-exposing/)

@@ -114,7 +114,9 @@ class FrontDeskApprovalTests(unittest.IsolatedAsyncioTestCase):
 
         async def invoke():
             ctx = SimpleNamespace(
-                invocation_id="invocation-1", branch="main", state=state
+                invocation_id="invocation-1",
+                branch="main",
+                session=SimpleNamespace(state=state),
             )
             with (
                 patch.object(front_desk, "intent_agent", intent),
@@ -147,7 +149,11 @@ class FrontDeskApprovalTests(unittest.IsolatedAsyncioTestCase):
             )
         )
         self.assertTrue(
-            all(proposal_id not in event.model_dump_json() for event in proposal_events)
+            any(
+                (event.actions.state_delta or {}).get(PENDING_RESTAURANT_PROPOSAL_KEY)
+                == proposal_id
+                for event in proposal_events
+            )
         )
 
         approval_events = await invoke()
@@ -194,7 +200,11 @@ class FrontDeskApprovalTests(unittest.IsolatedAsyncioTestCase):
     async def test_approval_without_a_pending_proposal_does_not_call_restaurant(self) -> None:
         state: dict[str, str] = {}
         intent = ScriptedIntentAgent(["approve"])
-        ctx = SimpleNamespace(invocation_id="invocation-1", branch="main", state=state)
+        ctx = SimpleNamespace(
+            invocation_id="invocation-1",
+            branch="main",
+            session=SimpleNamespace(state=state),
+        )
         with (
             patch.object(front_desk, "intent_agent", intent),
             patch.object(front_desk, "_create_remote_agent") as create_remote,
