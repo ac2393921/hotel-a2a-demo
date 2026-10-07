@@ -14,7 +14,7 @@ from google.adk.agents.remote_a2a_agent import (
     RemoteA2aAgent,
 )
 from google.adk.a2a.utils.agent_to_a2a import to_a2a
-from google.adk.events import Event
+from google.adk.events import Event, EventActions
 from google.genai import types
 from pydantic import ValidationError
 
@@ -216,8 +216,8 @@ class FrontDeskCoordinator(BaseAgent):
     async def _run_async_impl(
         self, ctx: InvocationContext
     ) -> AsyncGenerator[Event, None]:
-        pending_proposal_id = ctx.state.get(PENDING_RESTAURANT_PROPOSAL_KEY)
-        ctx.state["restaurant_change_pending"] = (
+        pending_proposal_id = ctx.session.state.get(PENDING_RESTAURANT_PROPOSAL_KEY)
+        ctx.session.state["restaurant_change_pending"] = (
             "yes" if pending_proposal_id else "no"
         )
         raw_intent: str | None = None
@@ -312,7 +312,7 @@ class FrontDeskCoordinator(BaseAgent):
                         statuses[event.author] = status
                     response_text = _text_from_event(event)
                     if event.author == "restaurant_agent" and response_text:
-                        response_text = self._handle_restaurant_response(
+                        response_text, state_delta = self._handle_restaurant_response(
                             ctx, response_text
                         )
                         if response_text != _text_from_event(event):
@@ -330,6 +330,7 @@ class FrontDeskCoordinator(BaseAgent):
                                         ],
                                     ),
                                     "custom_metadata": custom_metadata,
+                                    "actions": EventActions(state_delta=state_delta),
                                 }
                             )
                     if response_text and response_text not in responses[event.author]:
@@ -352,29 +353,38 @@ class FrontDeskCoordinator(BaseAgent):
     @staticmethod
     def _handle_restaurant_response(
         ctx: InvocationContext, response_text: str
-    ) -> str:
+    ) -> tuple[str, dict[str, str]]:
         try:
             response = json.loads(response_text)
         except json.JSONDecodeError:
-            return response_text
+            return response_text, {}
         if not isinstance(response, dict):
-            return response_text
+            return response_text, {}
 
         status = response.get("status")
         message = response.get("message")
         if status == "proposed":
             proposal_id = response.get("proposal_id")
             if isinstance(proposal_id, str) and proposal_id:
-                ctx.state[PENDING_RESTAURANT_PROPOSAL_KEY] = proposal_id
+                ctx.session.state[PENDING_RESTAURANT_PROPOSAL_KEY] = proposal_id
+                return (
+                    "20時への変更案が可能です。予約はまだ変更していません。"
+                    "この変更案を承認しますか？",
+                    {PENDING_RESTAURANT_PROPOSAL_KEY: proposal_id},
+                )
             return (
                 "20時への変更案が可能です。予約はまだ変更していません。"
-                "この変更案を承認しますか？"
+                "この変更案を承認しますか？",
+                {},
             )
         if status in {"approved", "rejected", "not_found"}:
-            ctx.state.pop(PENDING_RESTAURANT_PROPOSAL_KEY, None)
+            ctx.session.state.pop(PENDING_RESTAURANT_PROPOSAL_KEY, None)
+            state_delta = {PENDING_RESTAURANT_PROPOSAL_KEY: ""}
+        else:
+            state_delta = {}
         if isinstance(message, str) and message:
-            return message
-        return response_text
+            return message, state_delta
+        return response_text, state_delta
 
     def _final_event(self, ctx: InvocationContext, message: str) -> Event:
         return Event(
