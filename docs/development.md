@@ -35,9 +35,21 @@ uv run python scripts/check_ollama.py
 
 ## ローカルデモの起動
 
-前提のセットアップ後、リポジトリのルートで各コマンドを別々のターミナルから実行します。4つのAgentは別プロセスのA2Aサービスとして動き、ADK WebはFront Desk Agentをゲスト画面として読み込みます。
+前提のセットアップ後、リポジトリのルートで一括起動スクリプトを実行できます。4つのA2Aサービスとゲスト向けWeb UIが起動し、Ctrl+Cでまとめて停止します。
 
-Front Desk A2AサービスとADK Webは同じAgent定義をそれぞれ独立したプロセスで読み込みます。ゲストとの会話はADK Web側のFront Deskインスタンスが処理します。ポート8000が使用中の場合は、ADK Webの`--port`を空いているポート（例: 8010）に変更してください。
+```sh
+./scripts/start_demo.sh
+```
+
+ゲスト向けWeb UIの既定ポート8000を変更する場合は、たとえば次のように指定します。
+
+```sh
+GUEST_UI_PORT=8010 ./scripts/start_demo.sh
+```
+
+各Agentを別ターミナルから個別に起動する場合は、以下のコマンドを使います。4つのAgentは別プロセスのA2Aサービスとして動き、Guest UIはADK Runnerを通じてFront Desk Agentを呼び出します。
+
+Front Desk A2AサービスとGuest UIは同じAgent定義をそれぞれ独立したプロセスで読み込みます。ゲストとの会話はGuest UIプロセス内のFront Deskインスタンスが処理します。ポート8000が使用中の場合は、Guest UIの`--port`を空いているポート（例: 8010）に変更してください。
 
 | ターミナル | Agent / 画面 | 起動コマンド | ポート |
 | --- | --- | --- | ---: |
@@ -45,9 +57,9 @@ Front Desk A2AサービスとADK Webは同じAgent定義をそれぞれ独立し
 | 2 | Housekeeping Agent | `uv run uvicorn agents.housekeeping_agent.agent:a2a_app --host 127.0.0.1 --port 8002` | 8002 |
 | 3 | Restaurant Agent | `uv run uvicorn agents.restaurant_agent.agent:a2a_app --host 127.0.0.1 --port 8003` | 8003 |
 | 4 | Front Desk A2Aサービス | `uv run uvicorn agents.front_desk_agent.agent:a2a_app --host 127.0.0.1 --port 8004` | 8004 |
-| 5 | ADK Web | `PYTHONPATH=. uv run adk web agents/front_desk_agent --host 127.0.0.1 --port 8000` | 8000 |
+| 5 | Guest UI | `uv run uvicorn hotel_ui.app:app --host 127.0.0.1 --port 8000` | 8000 |
 
-ADK Webを開き、起動ログに表示されるURLでFront Desk Agentとの会話を開始します（既定ポートでは`http://127.0.0.1:8000`）。部署AgentのA2A Agent Cardはそれぞれ`http://localhost:8001/.well-known/agent-card.json`、`http://localhost:8002/.well-known/agent-card.json`、`http://localhost:8003/.well-known/agent-card.json`で確認できます。Front DeskのAgent Cardはポート8004で公開されます。
+Guest UIを開き、起動ログに表示されるURLでゲスト会話を開始します（既定ポートでは`http://127.0.0.1:8000`）。部署AgentのA2A Agent Cardはそれぞれ`http://localhost:8001/.well-known/agent-card.json`、`http://localhost:8002/.well-known/agent-card.json`、`http://localhost:8003/.well-known/agent-card.json`で確認できます。Front DeskのAgent Cardはポート8004で公開されます。
 
 停止するときは、起動した各ターミナルで`Ctrl+C`を押します。各サービスを別プロセスで起動しているため、停止対象を個別に選べます。
 
@@ -64,7 +76,7 @@ curl --fail http://localhost:8003/.well-known/agent-card.json
 curl --fail http://localhost:8004/.well-known/agent-card.json
 ```
 
-ADK Webは起動ログに表示されるローカルURLへアクセスします。各Agentを個別に起動できるため、障害時は該当するターミナルのログを確認できます。
+Guest UIは起動ログに表示されるローカルURLへアクセスします。各Agentを個別に起動できるため、障害時は該当するターミナルのログを確認できます。
 
 ## E2Eシナリオ
 
