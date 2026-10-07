@@ -14,6 +14,8 @@ from google.genai import types
 from agents.restaurant_agent.consultation import consultation_service
 
 MAX_REQUEST_LENGTH = 2_000
+# 2000文字の相談文と200文字の会話IDをJSON escapeしても受付ける。
+MAX_ENVELOPE_LENGTH = 14_000
 CURRENT_RESERVATION_TIME = "19:00"
 PROPOSED_RESERVATION_TIME = "20:00"
 
@@ -112,7 +114,7 @@ async def response_for_request(
     request_text: str, store: RestaurantReservationStore
 ) -> str:
     """Validate a JSON A2A command and return the store's JSON response."""
-    if len(request_text) > MAX_REQUEST_LENGTH:
+    if len(request_text) > MAX_ENVELOPE_LENGTH:
         result = {"status": "invalid_request", "message": "依頼文が長すぎます。"}
     else:
         try:
@@ -122,6 +124,8 @@ async def response_for_request(
         if isinstance(payload, dict):
             if "version" in payload:
                 result = await consultation_service.handle(payload)
+            elif len(request_text) > MAX_REQUEST_LENGTH:
+                result = {"status": "invalid_request", "message": "依頼文が長すぎます。"}
             else:
                 result = await store.handle(payload)
         else:
