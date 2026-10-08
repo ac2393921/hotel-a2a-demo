@@ -166,6 +166,8 @@ uv run --extra evaluation python scripts/eval_restaurant.py --case new_proposal 
 
 Restaurantの製品と評価で共通の生成設定は `temperature=0`、`num_ctx=8192`、`max_output_tokens=1200`、`think=false`。構造化toolと正しい業務要約の転記を安定させるための設定で、あらゆる入力の正しさやOllamaの解析エラー防止を保証しない。モデルや依存関係の変更と同様に、設定変更後は検収用の全試行を実行する。
 
+評価スクリプトはCLI子プロセスに `ADK_MAX_LLM_CALLS=8` を設定し、製品の1発話あたり上限8回と揃える。ADK CLIを直接呼ぶ場合もこの環境変数が必要となる。上限到達は `EXECUTION_ERROR` であり、合格としない。上限は結果の `metadata.json` に記録する。一次情報: [RunConfig](https://adk.dev/runtime/runconfig/)、[ロックしたADK 2.11.0の環境変数実装](https://github.com/google/adk-python/blob/v2.11.0/src/google/adk/agents/run_config.py)。確認日: 2026-10-08。
+
 応答内容、toolの選択と引数、業務結果の3基準すべてで、全ターン・全試行の合格を要求する。合格率の平均で危険な失敗を相殺しない。接続失敗や評価結果の欠落は `EXECUTION_ERROR` とし、モデル品質の `FAIL` と区別する。実行不能時は後続を `NOT_RUN` として停止する。
 
 結果は `.adk/restaurant-agent-eval/<日時>/` に保存する。モデル・依存バージョン・固定時刻・設定、ケース別ログ、ADKの評価結果、全試行の集計を記録する。CLIの終了コードだけで合否を判断しない。

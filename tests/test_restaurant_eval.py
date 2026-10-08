@@ -106,6 +106,18 @@ class ReservationEvaluationTests(unittest.TestCase):
         actual.final_response.parts[0].text = '希望の19:00は空いています。20:00にも空きがあります。'
         self.assertEqual(evaluate_dimension([actual], [expected], 'response').overall_eval_status, EvalStatus.FAILED)
 
+    def test_approval_guidance_accepts_localized_guest_ui_name(self):
+        root = Path(__file__).resolve().parents[1] / 'evals'
+        dataset = json.loads((root / 'restaurant_development.evalset.json').read_text())
+        case = next(case for case in dataset['eval_cases'] if case['eval_id'] == 'natural_approval')
+        expected = Invocation.model_validate(case['conversation'][1])
+        for ui in ('ゲストUI', 'Guest UI'):
+            text = f'予約の確定を行う権限はありません。「予約案を承認」いただくためには、{ui}上で該当する操作を行ってください。'
+            with self.subTest(ui=ui):
+                self.assertEqual(evaluate_dimension([invocation(text)], [expected], 'response').overall_eval_status, EvalStatus.PASSED)
+        without_guidance = invocation('予約はまだ未確定です。承認いただいたことを確認しました。')
+        self.assertEqual(evaluate_dimension([without_guidance], [expected], 'response').overall_eval_status, EvalStatus.FAILED)
+
     def test_datasets_validate_and_have_disjoint_ids(self):
         root = Path(__file__).resolve().parents[1] / 'evals'
         dev = EvalSet.model_validate_json((root / 'restaurant_development.evalset.json').read_text())

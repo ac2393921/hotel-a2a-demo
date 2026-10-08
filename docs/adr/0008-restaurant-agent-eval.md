@@ -32,3 +32,12 @@ ADR 0007のUIアダプターは今回の評価から除外する。LLMによる�
 - https://adk.dev/evaluate/custom_metrics/
 - https://adk.dev/evaluate/criteria/
 - https://zenn.dev/hampen2929/books/ai-agent-evaluation-guide （取得できた公開概要と章見出しを参照）
+
+## 実装時の実行上限確認
+
+2026-10-08の実測とロック済みADK 2.11.0の公式実装で、CLI評価はRunConfigを指定せず、既定のLLM呼び出し上限500回になることを確認した。製品と実行条件を揃えるため、評価子プロセスに `ADK_MAX_LLM_CALLS=8` を設定する。製品側の `RunConfig(max_llm_calls=8)` は維持する。上限到達は未検収であり、過去の結果を合格へ変更しない。
+
+一次情報（2026-10-08確認）:
+- https://adk.dev/runtime/runconfig/
+- https://github.com/google/adk-python/blob/v2.11.0/src/google/adk/agents/run_config.py
+- https://github.com/google/adk-python/blob/v2.11.0/src/google/adk/evaluation/evaluation_generator.py （ロック済みインストールの公式実装も確認）

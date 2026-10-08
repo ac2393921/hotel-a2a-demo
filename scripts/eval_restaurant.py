@@ -32,11 +32,13 @@ def main():
         cases = [args.case]
     args.output.mkdir(parents=True, exist_ok=False)
     load_dotenv(ROOT / '.env')
-    env = dict(os.environ, PYTHONPATH=str(ROOT))
+    # 製品のRunConfig(max_llm_calls=8)と同じ上限をCLIにも適用する。
+    env = dict(os.environ, PYTHONPATH=str(ROOT), ADK_MAX_LLM_CALLS='8')
     metadata = {'split': args.split, 'runs': args.runs, 'model': env.get('OLLAMA_MODEL', 'ollama_chat/qwen3.5:latest'),
                 'google-adk': version('google-adk'), 'litellm': version('litellm'),
                 'fixed_time': '2026-10-08T09:00:00+09:00', 'judge': None,
-                'settings': 'temperature=0, num_ctx=8192, think=false, max_output_tokens=1200'}
+                'settings': 'temperature=0, num_ctx=8192, think=false, max_output_tokens=1200',
+                'max_llm_calls': 8}
     sources = {Path(path) for path in [dataset, 'evals/eval_config.json', 'evals/metrics.py',
                                      'evals/__init__.py', 'scripts/eval_restaurant.py', 'pyproject.toml', 'uv.lock']}
     for directory in ('restaurant', 'agents/restaurant_agent', 'evals/restaurant_agent'):

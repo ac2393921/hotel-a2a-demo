@@ -1519,5 +1519,6 @@
     "select_change": "3回: 氏名・部屋番号があるのに照合を呼ばない",
     "missing_owner": "3回: 不足情報を空文字にして提案toolを呼ぶ",
     "natural_approval": "1回: 正しいゲストUI案内を採点器が認めない偽不合格。元の合否は保持。"
-  }
+  },
+  "source_commit": "97946bf1bb67cf500c9941074b0194ced427a3f8"
 }
