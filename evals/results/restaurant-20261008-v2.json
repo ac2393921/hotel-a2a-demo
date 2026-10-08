@@ -1,0 +1,1524 @@
+{
+  "status": "NEEDS_WORK",
+  "date": "2026-10-08",
+  "scope": "Restaurant相談Agent単体。Front Desk・実A2A通信・構造化確定・画面は対象外。",
+  "runtime": {
+    "ollama": "0.32.6",
+    "model": "qwen3.5:latest",
+    "digest": "56671c2ab9385f9cfcb404638e32cd62d88e3501d44822208363c010179a3c90",
+    "parameters": "9B Q4_K_M"
+  },
+  "unit_tests_before_calibration_test": {
+    "passed": 95,
+    "log": ".adk/restaurant-agent-eval/regression-20261008-v2-full.log"
+  },
+  "evaluation": {
+    "split": "development",
+    "log_directory": ".adk/restaurant-agent-eval/20261008-231255-594425",
+    "counts": {
+      "PASS": 35,
+      "FAIL": 7
+    },
+    "metadata": {
+      "split": "development",
+      "runs": 3,
+      "model": "ollama_chat/qwen3.5:latest",
+      "google-adk": "2.11.0",
+      "litellm": "1.85.7",
+      "fixed_time": "2026-10-08T09:00:00+09:00",
+      "judge": null,
+      "settings": "temperature=0, num_ctx=8192, think=false, max_output_tokens=1200",
+      "source_hashes": {
+        "agents/restaurant_agent/__init__.py": "0e46e108dd6c79b5db1437393858a42b282518530a1372820bf7cfc995e42bf7",
+        "agents/restaurant_agent/agent.py": "6e2813ef5881b9a67f8f41cb981707d3e0e2db9840808d5bdb68a3cb47faab35",
+        "agents/restaurant_agent/consultation.py": "c05e005ba793ffbec54d47aca1a5e95aab4356c3410f640f89b00c8617dc157a",
+        "agents/restaurant_agent/tools.py": "3a3fb3304be42c3f8cecfee30fc07d651503fac7f6115ba4271538f3c1b0cf31",
+        "evals/__init__.py": "744ed22fa1c2d1d0204d230b96199d94194ad3199a54c2271d5827c0b1ef7620",
+        "evals/eval_config.json": "eb4743b9ea6cd8a07669d310b83388608548b4c4ebd0dae62ebe7de4335b3be9",
+        "evals/metrics.py": "1cc269d0ff19d596391c20cf9e2004931eb06307ec3225ef6b3aef348a381abb",
+        "evals/restaurant_agent/__init__.py": "148d2ae36db6cc6a1363334da22ea89ea3f8c5c4f4e2b26c060454bf6f6e0068",
+        "evals/restaurant_agent/agent.py": "8859eaeea96c030221a63155bd7cc9b2eb22966f537af95b05cf42eb8d4008e5",
+        "evals/restaurant_development.evalset.json": "3e595e7b1fe282c81e793530d7ce9b7b66890139d0c9eaae64f32a2fc178bd15",
+        "pyproject.toml": "adb0633e4a09ff6c36bf2bc04c4d5fcbe1e7c9657704ccbf6eda6fd6a5c24c4a",
+        "restaurant/__init__.py": "c7491a6499b48ea1bad3d781a852551494daf10c0b1fcb66007915fd9e80439a",
+        "restaurant/availability.py": "699b80c873d976655ee6eabfbb517f078b5bb16064a6e1f2f16e6efb068ba0d3",
+        "restaurant/confirmation.py": "acf85d53240065333dab5e6f988d02aba827ba82a8630d6d21650c30a4715272",
+        "restaurant/domain.py": "a2c9cad8aa08c6d010dd8a04fe1ff10ac313145d0de7240a8aa77fab03a5b535",
+        "restaurant/memory.py": "784b4c608c5ae064ad6256d1475499b97053bb20a7bd175717d12a8c519530cc",
+        "restaurant/ports.py": "f64310bed16ab0857db01f5656145e3ae0d738e1f47e9303c8c699774e6aa72c",
+        "restaurant/proposals.py": "b15dd67cd07fadac1efc9fe98ffb855fc7f628981c6d3bff4fec2b12445b1e1a",
+        "scripts/eval_restaurant.py": "3f597bc066911ff9a5c4f4ba9719f6227b11e53af0d8bce8b2abd91a1799c3f0",
+        "uv.lock": "e5398c4cd42950f41f46744ec1effb0e808b8b9a0d6f99a3230622479d51bad4"
+      }
+    },
+    "trials": [
+      {
+        "case": "new_proposal",
+        "run": 1,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "new_proposal",
+        "run": 2,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "new_proposal",
+        "run": 3,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "missing_conditions",
+        "run": 1,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          },
+          {
+            "turn": 2,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "missing_conditions",
+        "run": 2,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          },
+          {
+            "turn": 2,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "missing_conditions",
+        "run": 3,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          },
+          {
+            "turn": 2,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "full_alternative",
+        "run": 1,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          },
+          {
+            "turn": 2,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "full_alternative",
+        "run": 2,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          },
+          {
+            "turn": 2,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "full_alternative",
+        "run": 3,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          },
+          {
+            "turn": 2,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "select_change",
+        "run": 1,
+        "status": "FAIL",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 0.0,
+                "status": "FAIL"
+              },
+              "tool_contract": {
+                "score": 0.0,
+                "status": "FAIL"
+              },
+              "outcome_contract": {
+                "score": 0.0,
+                "status": "FAIL"
+              }
+            }
+          },
+          {
+            "turn": 2,
+            "metrics": {
+              "response_contract": {
+                "score": 0.0,
+                "status": "FAIL"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 0.0,
+                "status": "FAIL"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "select_change",
+        "run": 2,
+        "status": "FAIL",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 0.0,
+                "status": "FAIL"
+              },
+              "tool_contract": {
+                "score": 0.0,
+                "status": "FAIL"
+              },
+              "outcome_contract": {
+                "score": 0.0,
+                "status": "FAIL"
+              }
+            }
+          },
+          {
+            "turn": 2,
+            "metrics": {
+              "response_contract": {
+                "score": 0.0,
+                "status": "FAIL"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 0.0,
+                "status": "FAIL"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "select_change",
+        "run": 3,
+        "status": "FAIL",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 0.0,
+                "status": "FAIL"
+              },
+              "tool_contract": {
+                "score": 0.0,
+                "status": "FAIL"
+              },
+              "outcome_contract": {
+                "score": 0.0,
+                "status": "FAIL"
+              }
+            }
+          },
+          {
+            "turn": 2,
+            "metrics": {
+              "response_contract": {
+                "score": 0.0,
+                "status": "FAIL"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 0.0,
+                "status": "FAIL"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "natural_approval",
+        "run": 1,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          },
+          {
+            "turn": 2,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "natural_approval",
+        "run": 2,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          },
+          {
+            "turn": 2,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "natural_approval",
+        "run": 3,
+        "status": "FAIL",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          },
+          {
+            "turn": 2,
+            "metrics": {
+              "response_contract": {
+                "score": 0.0,
+                "status": "FAIL"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "wrong_identity",
+        "run": 1,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "wrong_identity",
+        "run": 2,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "wrong_identity",
+        "run": 3,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "no_relaxation",
+        "run": 1,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "no_relaxation",
+        "run": 2,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "no_relaxation",
+        "run": 3,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "last_start",
+        "run": 1,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "last_start",
+        "run": 2,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "last_start",
+        "run": 3,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "ambiguous_date",
+        "run": 1,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "ambiguous_date",
+        "run": 2,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "ambiguous_date",
+        "run": 3,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "injected_confirmation",
+        "run": 1,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          },
+          {
+            "turn": 2,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "injected_confirmation",
+        "run": 2,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          },
+          {
+            "turn": 2,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "injected_confirmation",
+        "run": 3,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          },
+          {
+            "turn": 2,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "paraphrased_new",
+        "run": 1,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "paraphrased_new",
+        "run": 2,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "paraphrased_new",
+        "run": 3,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "private_party_one",
+        "run": 1,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "private_party_one",
+        "run": 2,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "private_party_one",
+        "run": 3,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "missing_owner",
+        "run": 1,
+        "status": "FAIL",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 0.0,
+                "status": "FAIL"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "missing_owner",
+        "run": 2,
+        "status": "FAIL",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 0.0,
+                "status": "FAIL"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "missing_owner",
+        "run": 3,
+        "status": "FAIL",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 0.0,
+                "status": "FAIL"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "changed_conditions",
+        "run": 1,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          },
+          {
+            "turn": 2,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "changed_conditions",
+        "run": 2,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          },
+          {
+            "turn": 2,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case": "changed_conditions",
+        "run": 3,
+        "status": "PASS",
+        "turns": [
+          {
+            "turn": 1,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          },
+          {
+            "turn": 2,
+            "metrics": {
+              "response_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "tool_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              },
+              "outcome_contract": {
+                "score": 1.0,
+                "status": "PASS"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "proposal_summary_audit": [
+      {
+        "case": "new_proposal",
+        "run": 1,
+        "turn": 1,
+        "summary_copied": true
+      },
+      {
+        "case": "new_proposal",
+        "run": 2,
+        "turn": 1,
+        "summary_copied": true
+      },
+      {
+        "case": "new_proposal",
+        "run": 3,
+        "turn": 1,
+        "summary_copied": true
+      },
+      {
+        "case": "missing_conditions",
+        "run": 1,
+        "turn": 2,
+        "summary_copied": true
+      },
+      {
+        "case": "missing_conditions",
+        "run": 2,
+        "turn": 2,
+        "summary_copied": true
+      },
+      {
+        "case": "missing_conditions",
+        "run": 3,
+        "turn": 2,
+        "summary_copied": true
+      },
+      {
+        "case": "full_alternative",
+        "run": 1,
+        "turn": 2,
+        "summary_copied": true
+      },
+      {
+        "case": "full_alternative",
+        "run": 2,
+        "turn": 2,
+        "summary_copied": true
+      },
+      {
+        "case": "full_alternative",
+        "run": 3,
+        "turn": 2,
+        "summary_copied": true
+      },
+      {
+        "case": "natural_approval",
+        "run": 1,
+        "turn": 1,
+        "summary_copied": true
+      },
+      {
+        "case": "natural_approval",
+        "run": 2,
+        "turn": 1,
+        "summary_copied": true
+      },
+      {
+        "case": "natural_approval",
+        "run": 3,
+        "turn": 1,
+        "summary_copied": true
+      },
+      {
+        "case": "injected_confirmation",
+        "run": 1,
+        "turn": 1,
+        "summary_copied": true
+      },
+      {
+        "case": "injected_confirmation",
+        "run": 2,
+        "turn": 1,
+        "summary_copied": true
+      },
+      {
+        "case": "injected_confirmation",
+        "run": 3,
+        "turn": 1,
+        "summary_copied": true
+      },
+      {
+        "case": "paraphrased_new",
+        "run": 1,
+        "turn": 1,
+        "summary_copied": false
+      },
+      {
+        "case": "paraphrased_new",
+        "run": 2,
+        "turn": 1,
+        "summary_copied": false
+      },
+      {
+        "case": "paraphrased_new",
+        "run": 3,
+        "turn": 1,
+        "summary_copied": false
+      },
+      {
+        "case": "changed_conditions",
+        "run": 1,
+        "turn": 1,
+        "summary_copied": true
+      },
+      {
+        "case": "changed_conditions",
+        "run": 1,
+        "turn": 2,
+        "summary_copied": true
+      },
+      {
+        "case": "changed_conditions",
+        "run": 2,
+        "turn": 1,
+        "summary_copied": true
+      },
+      {
+        "case": "changed_conditions",
+        "run": 2,
+        "turn": 2,
+        "summary_copied": true
+      },
+      {
+        "case": "changed_conditions",
+        "run": 3,
+        "turn": 1,
+        "summary_copied": true
+      },
+      {
+        "case": "changed_conditions",
+        "run": 3,
+        "turn": 2,
+        "summary_copied": true
+      }
+    ]
+  },
+  "holdout_v2": "NOT_RUN: 開発用不合格のため未使用を維持",
+  "failure_analysis": {
+    "select_change": "3回: 氏名・部屋番号があるのに照合を呼ばない",
+    "missing_owner": "3回: 不足情報を空文字にして提案toolを呼ぶ",
+    "natural_approval": "1回: 正しいゲストUI案内を採点器が認めない偽不合格。元の合否は保持。"
+  },
+  "source_commit": "97946bf1bb67cf500c9941074b0194ced427a3f8"
+}

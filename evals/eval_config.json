@@ -1,0 +1,24 @@
+{
+  "criteria": {
+    "response_contract": 1.0,
+    "tool_contract": 1.0,
+    "outcome_contract": 1.0
+  },
+  "custom_metrics": {
+    "response_contract": {
+      "code_config": {
+        "name": "evals.metrics.response_contract"
+      }
+    },
+    "tool_contract": {
+      "code_config": {
+        "name": "evals.metrics.tool_contract"
+      }
+    },
+    "outcome_contract": {
+      "code_config": {
+        "name": "evals.metrics.outcome_contract"
+      }
+    }
+  }
+}

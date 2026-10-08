@@ -91,6 +91,21 @@ class ToolTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual((await service.handle(payload))['status'], 'invalid_request')
         self.assertEqual(service._conversations, {})
 
+    async def test_maximum_consultation_text_survives_json_envelope(self):
+        from unittest.mock import AsyncMock, patch
+        from agents.restaurant_agent.agent import response_for_request, RestaurantReservationStore
+        payload = {'version':2,'action':'consult','conversation_id':'会'*200,'message':'文'*2000}
+        encoded = json.dumps(payload)
+        handle = AsyncMock(return_value={'status':'clarification_required','message':'確認します。'})
+        with patch('agents.restaurant_agent.agent.consultation_service.handle', handle):
+            result = json.loads(await response_for_request(encoded, RestaurantReservationStore()))
+        self.assertEqual(result['status'], 'clarification_required')
+        handle.assert_awaited_once_with(payload)
+        service = ConsultationService(self.repo, self.clock, ProposalModel())
+        payload['message'] += '文'
+        self.assertEqual((await service.handle(payload))['status'], 'invalid_request')
+        self.assertEqual(service._conversations, {})
+
     async def test_version_two_proposal_over_public_a2a(self):
         from unittest.mock import patch
         from uuid import uuid4

@@ -1,0 +1,597 @@
+{
+  "status": "NEEDS_WORK",
+  "date": "2026-10-08",
+  "scope": "Restaurant相談Agent単体。Front Desk・実A2A通信・構造化確定・画面は対象外。",
+  "diagnostics": [
+    {
+      "log_directory": ".adk/restaurant-agent-eval/20261008-234436-470739",
+      "counts": {
+        "PASS": 3
+      },
+      "metadata": {
+        "split": "development",
+        "runs": 3,
+        "model": "ollama_chat/qwen3.5:latest",
+        "google-adk": "2.11.0",
+        "litellm": "1.85.7",
+        "fixed_time": "2026-10-08T09:00:00+09:00",
+        "judge": null,
+        "settings": "temperature=0, num_ctx=8192, think=false, max_output_tokens=1200",
+        "source_hashes": {
+          "agents/restaurant_agent/__init__.py": "0e46e108dd6c79b5db1437393858a42b282518530a1372820bf7cfc995e42bf7",
+          "agents/restaurant_agent/agent.py": "6e2813ef5881b9a67f8f41cb981707d3e0e2db9840808d5bdb68a3cb47faab35",
+          "agents/restaurant_agent/consultation.py": "f0b53db630db42c767a0616d13b1226146924a49596b2165a3e58d2475e19779",
+          "agents/restaurant_agent/tools.py": "3a3fb3304be42c3f8cecfee30fc07d651503fac7f6115ba4271538f3c1b0cf31",
+          "evals/__init__.py": "744ed22fa1c2d1d0204d230b96199d94194ad3199a54c2271d5827c0b1ef7620",
+          "evals/eval_config.json": "eb4743b9ea6cd8a07669d310b83388608548b4c4ebd0dae62ebe7de4335b3be9",
+          "evals/metrics.py": "1cc269d0ff19d596391c20cf9e2004931eb06307ec3225ef6b3aef348a381abb",
+          "evals/restaurant_agent/__init__.py": "148d2ae36db6cc6a1363334da22ea89ea3f8c5c4f4e2b26c060454bf6f6e0068",
+          "evals/restaurant_agent/agent.py": "8859eaeea96c030221a63155bd7cc9b2eb22966f537af95b05cf42eb8d4008e5",
+          "evals/restaurant_development.evalset.json": "75895a7fe276fc96e462763ab8bc6b55e97373d38435f5148ee39adc8c5b5016",
+          "pyproject.toml": "adb0633e4a09ff6c36bf2bc04c4d5fcbe1e7c9657704ccbf6eda6fd6a5c24c4a",
+          "restaurant/__init__.py": "c7491a6499b48ea1bad3d781a852551494daf10c0b1fcb66007915fd9e80439a",
+          "restaurant/availability.py": "699b80c873d976655ee6eabfbb517f078b5bb16064a6e1f2f16e6efb068ba0d3",
+          "restaurant/confirmation.py": "acf85d53240065333dab5e6f988d02aba827ba82a8630d6d21650c30a4715272",
+          "restaurant/domain.py": "a2c9cad8aa08c6d010dd8a04fe1ff10ac313145d0de7240a8aa77fab03a5b535",
+          "restaurant/memory.py": "784b4c608c5ae064ad6256d1475499b97053bb20a7bd175717d12a8c519530cc",
+          "restaurant/ports.py": "f64310bed16ab0857db01f5656145e3ae0d738e1f47e9303c8c699774e6aa72c",
+          "restaurant/proposals.py": "b15dd67cd07fadac1efc9fe98ffb855fc7f628981c6d3bff4fec2b12445b1e1a",
+          "scripts/eval_restaurant.py": "3f597bc066911ff9a5c4f4ba9719f6227b11e53af0d8bce8b2abd91a1799c3f0",
+          "uv.lock": "e5398c4cd42950f41f46744ec1effb0e808b8b9a0d6f99a3230622479d51bad4"
+        }
+      },
+      "trials": [
+        {
+          "case": "select_change",
+          "run": 1,
+          "status": "PASS",
+          "turns": [
+            {
+              "turn": 1,
+              "metrics": {
+                "response_contract": {
+                  "score": 1.0,
+                  "status": "PASS"
+                },
+                "tool_contract": {
+                  "score": 1.0,
+                  "status": "PASS"
+                },
+                "outcome_contract": {
+                  "score": 1.0,
+                  "status": "PASS"
+                }
+              }
+            },
+            {
+              "turn": 2,
+              "metrics": {
+                "response_contract": {
+                  "score": 1.0,
+                  "status": "PASS"
+                },
+                "tool_contract": {
+                  "score": 1.0,
+                  "status": "PASS"
+                },
+                "outcome_contract": {
+                  "score": 1.0,
+                  "status": "PASS"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "case": "select_change",
+          "run": 2,
+          "status": "PASS",
+          "turns": [
+            {
+              "turn": 1,
+              "metrics": {
+                "response_contract": {
+                  "score": 1.0,
+                  "status": "PASS"
+                },
+                "tool_contract": {
+                  "score": 1.0,
+                  "status": "PASS"
+                },
+                "outcome_contract": {
+                  "score": 1.0,
+                  "status": "PASS"
+                }
+              }
+            },
+            {
+              "turn": 2,
+              "metrics": {
+                "response_contract": {
+                  "score": 1.0,
+                  "status": "PASS"
+                },
+                "tool_contract": {
+                  "score": 1.0,
+                  "status": "PASS"
+                },
+                "outcome_contract": {
+                  "score": 1.0,
+                  "status": "PASS"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "case": "select_change",
+          "run": 3,
+          "status": "PASS",
+          "turns": [
+            {
+              "turn": 1,
+              "metrics": {
+                "response_contract": {
+                  "score": 1.0,
+                  "status": "PASS"
+                },
+                "tool_contract": {
+                  "score": 1.0,
+                  "status": "PASS"
+                },
+                "outcome_contract": {
+                  "score": 1.0,
+                  "status": "PASS"
+                }
+              }
+            },
+            {
+              "turn": 2,
+              "metrics": {
+                "response_contract": {
+                  "score": 1.0,
+                  "status": "PASS"
+                },
+                "tool_contract": {
+                  "score": 1.0,
+                  "status": "PASS"
+                },
+                "outcome_contract": {
+                  "score": 1.0,
+                  "status": "PASS"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "log_directory": ".adk/restaurant-agent-eval/20261008-235029-933023",
+      "counts": {
+        "PASS": 3
+      },
+      "metadata": {
+        "split": "development",
+        "runs": 3,
+        "model": "ollama_chat/qwen3.5:latest",
+        "google-adk": "2.11.0",
+        "litellm": "1.85.7",
+        "fixed_time": "2026-10-08T09:00:00+09:00",
+        "judge": null,
+        "settings": "temperature=0, num_ctx=8192, think=false, max_output_tokens=1200",
+        "source_hashes": {
+          "agents/restaurant_agent/__init__.py": "0e46e108dd6c79b5db1437393858a42b282518530a1372820bf7cfc995e42bf7",
+          "agents/restaurant_agent/agent.py": "6e2813ef5881b9a67f8f41cb981707d3e0e2db9840808d5bdb68a3cb47faab35",
+          "agents/restaurant_agent/consultation.py": "f0b53db630db42c767a0616d13b1226146924a49596b2165a3e58d2475e19779",
+          "agents/restaurant_agent/tools.py": "3a3fb3304be42c3f8cecfee30fc07d651503fac7f6115ba4271538f3c1b0cf31",
+          "evals/__init__.py": "744ed22fa1c2d1d0204d230b96199d94194ad3199a54c2271d5827c0b1ef7620",
+          "evals/eval_config.json": "eb4743b9ea6cd8a07669d310b83388608548b4c4ebd0dae62ebe7de4335b3be9",
+          "evals/metrics.py": "1cc269d0ff19d596391c20cf9e2004931eb06307ec3225ef6b3aef348a381abb",
+          "evals/restaurant_agent/__init__.py": "148d2ae36db6cc6a1363334da22ea89ea3f8c5c4f4e2b26c060454bf6f6e0068",
+          "evals/restaurant_agent/agent.py": "8859eaeea96c030221a63155bd7cc9b2eb22966f537af95b05cf42eb8d4008e5",
+          "evals/restaurant_development.evalset.json": "75895a7fe276fc96e462763ab8bc6b55e97373d38435f5148ee39adc8c5b5016",
+          "pyproject.toml": "adb0633e4a09ff6c36bf2bc04c4d5fcbe1e7c9657704ccbf6eda6fd6a5c24c4a",
+          "restaurant/__init__.py": "c7491a6499b48ea1bad3d781a852551494daf10c0b1fcb66007915fd9e80439a",
+          "restaurant/availability.py": "699b80c873d976655ee6eabfbb517f078b5bb16064a6e1f2f16e6efb068ba0d3",
+          "restaurant/confirmation.py": "acf85d53240065333dab5e6f988d02aba827ba82a8630d6d21650c30a4715272",
+          "restaurant/domain.py": "a2c9cad8aa08c6d010dd8a04fe1ff10ac313145d0de7240a8aa77fab03a5b535",
+          "restaurant/memory.py": "784b4c608c5ae064ad6256d1475499b97053bb20a7bd175717d12a8c519530cc",
+          "restaurant/ports.py": "f64310bed16ab0857db01f5656145e3ae0d738e1f47e9303c8c699774e6aa72c",
+          "restaurant/proposals.py": "b15dd67cd07fadac1efc9fe98ffb855fc7f628981c6d3bff4fec2b12445b1e1a",
+          "scripts/eval_restaurant.py": "3f597bc066911ff9a5c4f4ba9719f6227b11e53af0d8bce8b2abd91a1799c3f0",
+          "uv.lock": "e5398c4cd42950f41f46744ec1effb0e808b8b9a0d6f99a3230622479d51bad4"
+        }
+      },
+      "trials": [
+        {
+          "case": "missing_owner",
+          "run": 1,
+          "status": "PASS",
+          "turns": [
+            {
+              "turn": 1,
+              "metrics": {
+                "response_contract": {
+                  "score": 1.0,
+                  "status": "PASS"
+                },
+                "tool_contract": {
+                  "score": 1.0,
+                  "status": "PASS"
+                },
+                "outcome_contract": {
+                  "score": 1.0,
+                  "status": "PASS"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "case": "missing_owner",
+          "run": 2,
+          "status": "PASS",
+          "turns": [
+            {
+              "turn": 1,
+              "metrics": {
+                "response_contract": {
+                  "score": 1.0,
+                  "status": "PASS"
+                },
+                "tool_contract": {
+                  "score": 1.0,
+                  "status": "PASS"
+                },
+                "outcome_contract": {
+                  "score": 1.0,
+                  "status": "PASS"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "case": "missing_owner",
+          "run": 3,
+          "status": "PASS",
+          "turns": [
+            {
+              "turn": 1,
+              "metrics": {
+                "response_contract": {
+                  "score": 1.0,
+                  "status": "PASS"
+                },
+                "tool_contract": {
+                  "score": 1.0,
+                  "status": "PASS"
+                },
+                "outcome_contract": {
+                  "score": 1.0,
+                  "status": "PASS"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "development": {
+    "log_directory": ".adk/restaurant-agent-eval/20261008-235212-050540",
+    "counts": {
+      "EXECUTION_ERROR": 1,
+      "NOT_RUN": 41
+    },
+    "metadata": {
+      "split": "development",
+      "runs": 3,
+      "model": "ollama_chat/qwen3.5:latest",
+      "google-adk": "2.11.0",
+      "litellm": "1.85.7",
+      "fixed_time": "2026-10-08T09:00:00+09:00",
+      "judge": null,
+      "settings": "temperature=0, num_ctx=8192, think=false, max_output_tokens=1200",
+      "source_hashes": {
+        "agents/restaurant_agent/__init__.py": "0e46e108dd6c79b5db1437393858a42b282518530a1372820bf7cfc995e42bf7",
+        "agents/restaurant_agent/agent.py": "6e2813ef5881b9a67f8f41cb981707d3e0e2db9840808d5bdb68a3cb47faab35",
+        "agents/restaurant_agent/consultation.py": "f0b53db630db42c767a0616d13b1226146924a49596b2165a3e58d2475e19779",
+        "agents/restaurant_agent/tools.py": "3a3fb3304be42c3f8cecfee30fc07d651503fac7f6115ba4271538f3c1b0cf31",
+        "evals/__init__.py": "744ed22fa1c2d1d0204d230b96199d94194ad3199a54c2271d5827c0b1ef7620",
+        "evals/eval_config.json": "eb4743b9ea6cd8a07669d310b83388608548b4c4ebd0dae62ebe7de4335b3be9",
+        "evals/metrics.py": "1cc269d0ff19d596391c20cf9e2004931eb06307ec3225ef6b3aef348a381abb",
+        "evals/restaurant_agent/__init__.py": "148d2ae36db6cc6a1363334da22ea89ea3f8c5c4f4e2b26c060454bf6f6e0068",
+        "evals/restaurant_agent/agent.py": "8859eaeea96c030221a63155bd7cc9b2eb22966f537af95b05cf42eb8d4008e5",
+        "evals/restaurant_development.evalset.json": "75895a7fe276fc96e462763ab8bc6b55e97373d38435f5148ee39adc8c5b5016",
+        "pyproject.toml": "adb0633e4a09ff6c36bf2bc04c4d5fcbe1e7c9657704ccbf6eda6fd6a5c24c4a",
+        "restaurant/__init__.py": "c7491a6499b48ea1bad3d781a852551494daf10c0b1fcb66007915fd9e80439a",
+        "restaurant/availability.py": "699b80c873d976655ee6eabfbb517f078b5bb16064a6e1f2f16e6efb068ba0d3",
+        "restaurant/confirmation.py": "acf85d53240065333dab5e6f988d02aba827ba82a8630d6d21650c30a4715272",
+        "restaurant/domain.py": "a2c9cad8aa08c6d010dd8a04fe1ff10ac313145d0de7240a8aa77fab03a5b535",
+        "restaurant/memory.py": "784b4c608c5ae064ad6256d1475499b97053bb20a7bd175717d12a8c519530cc",
+        "restaurant/ports.py": "f64310bed16ab0857db01f5656145e3ae0d738e1f47e9303c8c699774e6aa72c",
+        "restaurant/proposals.py": "b15dd67cd07fadac1efc9fe98ffb855fc7f628981c6d3bff4fec2b12445b1e1a",
+        "scripts/eval_restaurant.py": "3f597bc066911ff9a5c4f4ba9719f6227b11e53af0d8bce8b2abd91a1799c3f0",
+        "uv.lock": "e5398c4cd42950f41f46744ec1effb0e808b8b9a0d6f99a3230622479d51bad4"
+      }
+    },
+    "trials": [
+      {
+        "case": "new_proposal",
+        "run": 1,
+        "status": "EXECUTION_ERROR",
+        "turns": [],
+        "error": "評価実行を中断したため、この試行は未検収"
+      },
+      {
+        "case": "new_proposal",
+        "run": 2,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "new_proposal",
+        "run": 3,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "missing_conditions",
+        "run": 1,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "missing_conditions",
+        "run": 2,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "missing_conditions",
+        "run": 3,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "full_alternative",
+        "run": 1,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "full_alternative",
+        "run": 2,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "full_alternative",
+        "run": 3,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "select_change",
+        "run": 1,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "select_change",
+        "run": 2,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "select_change",
+        "run": 3,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "natural_approval",
+        "run": 1,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "natural_approval",
+        "run": 2,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "natural_approval",
+        "run": 3,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "wrong_identity",
+        "run": 1,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "wrong_identity",
+        "run": 2,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "wrong_identity",
+        "run": 3,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "no_relaxation",
+        "run": 1,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "no_relaxation",
+        "run": 2,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "no_relaxation",
+        "run": 3,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "last_start",
+        "run": 1,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "last_start",
+        "run": 2,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "last_start",
+        "run": 3,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "ambiguous_date",
+        "run": 1,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "ambiguous_date",
+        "run": 2,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "ambiguous_date",
+        "run": 3,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "injected_confirmation",
+        "run": 1,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "injected_confirmation",
+        "run": 2,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "injected_confirmation",
+        "run": 3,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "paraphrased_new",
+        "run": 1,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "paraphrased_new",
+        "run": 2,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "paraphrased_new",
+        "run": 3,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "private_party_one",
+        "run": 1,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "private_party_one",
+        "run": 2,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "private_party_one",
+        "run": 3,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "missing_owner",
+        "run": 1,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "missing_owner",
+        "run": 2,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "missing_owner",
+        "run": 3,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "changed_conditions",
+        "run": 1,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "changed_conditions",
+        "run": 2,
+        "status": "NOT_RUN",
+        "turns": []
+      },
+      {
+        "case": "changed_conditions",
+        "run": 3,
+        "status": "NOT_RUN",
+        "turns": []
+      }
+    ]
+  },
+  "unit_tests": {
+    "passed": 96,
+    "log": ".adk/restaurant-agent-eval/regression-20261008-v3-full.log"
+  },
+  "holdout_v2": "NOT_RUN",
+  "failure_analysis": [
+    "既存予約の照合・変更、所有者情報不足の診断は各3回合格したが、同版全件評価は最初の新規提案でLLM呼び出しを繰り返し、最終応答に到達しなかった。",
+    "呼び出しログが製品上限8回を超えていたため手動中断した。実行中1試行はEXECUTION_ERROR、残り41試行はNOT_RUN。合格扱いしない。",
+    "同版のRunConfig(max_llm_calls=8)による実イベント診断は、dateにISO日時全体を渡したsearch_availabilityの誤呼び出しを繰り返し、LlmCallsLimitExceededErrorで終了した。ログ: .adk/restaurant-agent-eval/diagnostic-20261009-loop-events.log",
+    "この版の評価CLIはADK既定上限500回で、製品の8回と不一致だった。次版でADK_MAX_LLM_CALLS=8を設定し、過去の成績は保持する。"
+  ],
+  "runtime": {
+    "ollama": "0.32.6",
+    "model": "qwen3.5:latest",
+    "digest": "56671c2ab9385f9cfcb404638e32cd62d88e3501d44822208363c010179a3c90",
+    "parameters": "9B Q4_K_M"
+  },
+  "consultation_source_snapshot": {
+    "path": "evals/archive/restaurant_consultation_v3.py.txt",
+    "sha256": "f0b53db630db42c767a0616d13b1226146924a49596b2165a3e58d2475e19779"
+  }
+}

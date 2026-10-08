@@ -1,0 +1,43 @@
+# ADR 0008: Restaurant Agent単体のシナリオ評価
+
+- 状態: 採用
+- 日付: 2026-10-08
+- 置き換える判断: ADR 0007のUI経由のADK評価方式
+
+## 背景
+
+Issue #57の検証にADK評価を用いる。ユーザーから、UIを開かずAgent単体のシナリオを評価するよう指定された。UI経由の評価は通信・表示の失敗とAgentの判断品質が混在する。
+
+## 決定
+
+Restaurant相談Agentの生成関数を製品と評価で共有する。固定時刻と架空の業務データを使用し、自然文の会話を `adk eval` で実行する。開発用10件と最終確認用4件を分け、各3回試行する。応答、tool選択・引数、業務結果をコード採点器で評価し、全条件の合格を求める。採点器自体も既知の正常・故障トレースで検証する。
+
+## 理由
+
+本番と同じ指示・モデル・toolを使いながら、Agentの判断を独立して評価できる。固定条件と試行ごとの初期化により、失敗を再現しやすい。実行不能と品質不合格を区別し、結果を誤認しない。
+
+## 代替案
+
+ADR 0007のUIアダプターは今回の評価から除外する。LLMによる採点は、判断の揺らぎと追加依存を避けるため採用しない。文字列の完全一致も言い換えを過度に拒否するため採用しない。
+
+## 影響と安全性
+
+この評価の合格はUI・A2A・確定操作の合格を意味しない。構造化承認と競合防止は既存の業務テストで補完する。自然文承認や確定を強制する入力から、確定toolが呼ばれないことを評価する。実在のゲスト情報を使用せず、承認tokenの露出を拒否する。旧UI評価の履歴は保存し、新評価の結果として扱わない。
+
+## 参考資料
+
+以下を2026-10-08に確認した。
+
+- https://adk.dev/evaluate/
+- https://adk.dev/evaluate/custom_metrics/
+- https://adk.dev/evaluate/criteria/
+- https://zenn.dev/hampen2929/books/ai-agent-evaluation-guide （取得できた公開概要と章見出しを参照）
+
+## 実装時の実行上限確認
+
+2026-10-08の実測とロック済みADK 2.11.0の公式実装で、CLI評価はRunConfigを指定せず、既定のLLM呼び出し上限500回になることを確認した。製品と実行条件を揃えるため、評価子プロセスに `ADK_MAX_LLM_CALLS=8` を設定する。製品側の `RunConfig(max_llm_calls=8)` は維持する。上限到達は未検収であり、過去の結果を合格へ変更しない。
+
+一次情報（2026-10-08確認）:
+- https://adk.dev/runtime/runconfig/
+- https://github.com/google/adk-python/blob/v2.11.0/src/google/adk/agents/run_config.py
+- https://github.com/google/adk-python/blob/v2.11.0/src/google/adk/evaluation/evaluation_generator.py （ロック済みインストールの公式実装も確認）

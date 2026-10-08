@@ -50,7 +50,7 @@ class ReservationTools:
             return self._record({'status': 'invalid_request', 'message': '予約条件を確認してください。'})
 
     def find_reservations(self, room_number: str, guest_name: str) -> dict:
-        """部屋番号と氏名を照合する。複数予約なら対象を選んでもらう。"""
+        """既存予約の照合・変更を希望するときだけ使う。新規予約には使わない。複数予約なら対象を選んでもらう。"""
         try:
             return self._record(self.proposals.find(self.conversation_id, Guest(room_number, guest_name)))
         except (ValueError, TypeError):

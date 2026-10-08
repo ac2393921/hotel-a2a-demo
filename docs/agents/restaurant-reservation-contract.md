@@ -76,3 +76,5 @@ version未指定の旧操作は移行期間だけ既存の固定シナリオ用�
 - ADK Function tools: https://adk.dev/tools-custom/function-tools/ （2026-10-07確認。Python関数をtoolsに登録する方式とコンテキスト注入）
 - ADK LiteLLM: https://adk.dev/agents/models/litellm/ （2026-10-07確認。既存Front Deskと同じ連携方式）
 - ADK A2A公開: https://adk.dev/a2a/quickstart-exposing/ （2026-10-07確認。既存公開境界を維持）
+
+相談文はデコード後2000文字まで、会話IDは200文字までとする。A2AのJSON envelopeはUnicode escapeを含め14000文字まで受付け、デコード後にversion 2の項目別制約を検証する。旧互換契約の依頼文全体2000文字の上限は維持する。

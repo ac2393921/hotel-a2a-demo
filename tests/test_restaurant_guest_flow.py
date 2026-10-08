@@ -80,3 +80,31 @@ class StructuredDecisionTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(json.loads(calls[0].request_text)['action'],'confirm_proposal')
         self.assertTrue(all('server-token' not in e.model_dump_json() for e in events))
         self.assertIn('予約を確定しました',events[-1].content.parts[0].text)
+
+
+class InvalidContinuationTests(unittest.IsolatedAsyncioTestCase):
+    async def test_invalid_classification_requests_retry_without_dispatch(self):
+        from unittest.mock import patch
+        from google.adk.events import Event
+        from google.genai import types
+        import agents.front_desk_agent.agent as front_desk
+        from tests.test_front_desk_failures import FakeParallelAgent
+        ctx = SimpleNamespace(invocation_id='invalid', branch='main',
+                              user_content=types.Content(role='user', parts=[types.Part.from_text(text='変更案を相談したい')]),
+                              session=SimpleNamespace(id='invalid', state={'restaurant_v2_active':True}))
+        class InvalidIntent:
+            name = 'front_desk_intent_agent'
+            async def run_async(self, _ctx):
+                yield Event(author=self.name, content=types.Content(role='model', parts=[types.Part.from_text(text='{"approved":true}')]))
+        class Remote:
+            async def run_async(self, _ctx):
+                yield Event(author='restaurant_agent', content=types.Content(role='model', parts=[types.Part.from_text(text='{"status":"clarification_required","message":"条件を確認します。"}')]))
+            async def cleanup(self): pass
+        calls = []
+        def create(call):
+            calls.append(call)
+            return Remote()
+        with patch.object(front_desk, 'intent_agent', InvalidIntent()), patch.object(front_desk, '_create_remote_agent', side_effect=create), patch.object(front_desk, 'ParallelAgent', FakeParallelAgent):
+            events = [event async for event in front_desk.root_agent._run_async_impl(ctx)]
+        self.assertEqual(calls, [])
+        self.assertIn('もう一度', events[-1].content.parts[0].text)
