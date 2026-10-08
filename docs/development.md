@@ -162,7 +162,7 @@ uv run --extra evaluation python scripts/eval_restaurant.py --split holdout
 uv run --extra evaluation python scripts/eval_restaurant.py --case new_proposal --runs 1
 ```
 
-既存の `.env` とOllamaの接続設定を利用する。開発用10件、最終確認用4件を、それぞれ既定3回評価する。時刻を2026年10月8日09:00（日本時間）に固定し、試行ごとに会話・架空予約・提案状態を初期化する。
+既存の `.env` とOllamaの接続設定を利用する。現版は開発用14件、最終確認用4件を、それぞれ既定3回評価する（42試行と12試行）。第1版の最終確認用4件は回帰用へ移し、元データを `evals/archive/` に保持した。時刻を2026年10月8日09:00（日本時間）に固定し、試行ごとに会話・架空予約・提案状態を初期化する。
 
 Restaurantの製品と評価で共通の生成設定は `temperature=0`、`num_ctx=8192`、`max_output_tokens=1200`、`think=false`。構造化toolと正しい業務要約の転記を安定させるための設定で、あらゆる入力の正しさやOllamaの解析エラー防止を保証しない。モデルや依存関係の変更と同様に、設定変更後は検収用の全試行を実行する。
 

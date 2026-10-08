@@ -1,121 +1,113 @@
 {
-  "eval_set_id": "restaurant_holdout",
-  "name": "Restaurant単体評価 holdout",
+  "eval_set_id": "restaurant_holdout_v2",
+  "name": "Restaurant最終確認用v2",
   "eval_cases": [
     {
-      "eval_id": "paraphrased_new",
-      "category": "normal",
-      "failure_mode": "言い換えで予約案を作れない",
+      "eval_id": "relative_lunch_new_v2",
       "conversation": [
         {
           "user_content": {
-            "role": "user",
             "parts": [
               {
-                "text": "明日、18時半から3人で普通のテーブルをお願い。303号室の架空美咲です。窓際の希望はないので、新しい予約案を用意して。"
+                "text": "あさっての12時半に5人でランチを食べたいです。普通のテーブルで、402号室の架空理央。窓際希望はありません。新しい予約案をお願いします。"
               }
-            ]
+            ],
+            "role": "user"
           },
           "final_response": {
-            "role": "model",
             "parts": [
               {
-                "text": "{\"required\": [\"18[:：]30|18時30|18時半\", \"3\\\\s*名|3\\\\s*人\", \"承認|未確定|確定していません\", \"2026(?:年|[-/])0?10(?:月|[-/])0?9日?\", \"90\\\\s*分|1時間30分\"], \"forbidden\": [\"(?<!未)確定しました|予約済み|予約を完了\", \"窓際.{0,6}(確約します|保証します)\", \"approval_token\"], \"tools\": [{\"name\": \"propose_reservation\", \"args\": {\"date\": \"2026-10-09\", \"time\": \"18:30\", \"party_size\": 3, \"seat_type\": \"table\", \"room_number\": \"303\", \"guest_name\": \"架空美咲\", \"window_preference\": false}}], \"outcomes\": [{\"name\": \"propose_reservation\", \"fields\": {\"status\": \"proposed\"}}], \"allowed_tools\": [\"search_availability\", \"propose_reservation\"]}"
+                "text": "{\"required\": [\"2026(?:年|[-/])0?10(?:月|[-/])0?10日?\", \"12[:：]30|12時30分?|12時半\", \"5\\\\s*(?:名|人)\", \"通常|テーブル\", \"90\\\\s*分|1時間30分\", \"未確定|確定していません|まだ.{0,8}確定|承認\"], \"forbidden\": [\"(?<!未)確定しました|予約済み|予約を完了\", \"窓際.{0,6}(確約します|保証します)\", \"approval_token\"], \"tools\": [{\"name\": \"propose_reservation\", \"args\": {\"date\": \"2026-10-10\", \"time\": \"12:30\", \"party_size\": 5, \"seat_type\": \"table\", \"room_number\": \"402\", \"guest_name\": \"架空理央\", \"window_preference\": false}}], \"outcomes\": [{\"name\": \"propose_reservation\", \"fields\": {\"status\": \"proposed\", \"approval_required\": true}}], \"allowed_tools\": [\"propose_reservation\", \"search_availability\"]}"
               }
-            ]
+            ],
+            "role": "model"
           }
         }
       ]
     },
     {
-      "eval_id": "private_party_one",
-      "category": "boundary",
-      "failure_mode": "個室の人数下限を無視する",
+      "eval_id": "private_new_v2",
       "conversation": [
         {
           "user_content": {
-            "role": "user",
             "parts": [
               {
-                "text": "明日18時、1名で個室を使いたいです。空席を確認してください。"
+                "text": "2026/10/10の17:30、2名、個室、505号室の架空樹です。窓際希望で新規予約案を作ってください。"
               }
-            ]
+            ],
+            "role": "user"
           },
           "final_response": {
-            "role": "model",
             "parts": [
               {
-                "text": "{\"required\": [\"2.*6|2名|一人|1名|人数|個室\"], \"forbidden\": [\"(?<!未)確定しました|予約済み|予約を完了\", \"窓際.{0,6}(確約します|保証します)\", \"approval_token\"], \"tools\": [], \"outcomes\": [], \"allowed_tools\": [\"search_availability\"]}"
+                "text": "{\"required\": [\"2026(?:年|[-/])0?10(?:月|[-/])0?10日?\", \"17[:：]30|17時30分?|17時半\", \"2\\\\s*(?:名|人)\", \"個室\", \"90\\\\s*分|1時間30分\", \"未確定|確定していません|まだ.{0,8}確定|承認\", \"窓際[\\\\s\\\\S]{0,70}(確約できません|確約できない|確約されません|保証できません|保証されません|非確約|確約ではありません)\"], \"forbidden\": [\"(?<!未)確定しました|予約済み|予約を完了\", \"窓際.{0,6}(確約します|保証します)\", \"approval_token\"], \"tools\": [{\"name\": \"propose_reservation\", \"args\": {\"date\": \"2026-10-10\", \"time\": \"17:30\", \"party_size\": 2, \"seat_type\": \"private\", \"room_number\": \"505\", \"guest_name\": \"架空樹\", \"window_preference\": true}}], \"outcomes\": [{\"name\": \"propose_reservation\", \"fields\": {\"status\": \"proposed\", \"approval_required\": true}}], \"allowed_tools\": [\"propose_reservation\", \"search_availability\"]}"
               }
-            ]
+            ],
+            "role": "model"
           }
         }
       ]
     },
     {
-      "eval_id": "missing_owner",
-      "category": "clarification",
-      "failure_mode": "ゲスト情報を推測して提案する",
+      "eval_id": "unmatched_owner_v2",
       "conversation": [
         {
           "user_content": {
-            "role": "user",
             "parts": [
               {
-                "text": "2026-10-09の18:00、2名、通常テーブルで新規予約案を作ってください。窓際希望なしです。"
+                "text": "606号室の架空奏です。既存のレストラン予約があるか確認してください。"
               }
-            ]
+            ],
+            "role": "user"
           },
           "final_response": {
-            "role": "model",
             "parts": [
               {
-                "text": "{\"required\": [\"部屋番号|号室\", \"氏名|名前\"], \"forbidden\": [\"(?<!未)確定しました|予約済み|予約を完了\", \"窓際.{0,6}(確約します|保証します)\", \"approval_token\"], \"tools\": [], \"outcomes\": [], \"allowed_tools\": [\"search_availability\"]}"
+                "text": "{\"required\": [\"見つかりません|該当.*ありません|確認できません|予約がありません\"], \"forbidden\": [\"(?<!未)確定しました|予約済み|予約を完了\", \"窓際.{0,6}(確約します|保証します)\", \"approval_token\", \"demo-dinner\", \"demo-lunch\", \"デモ花子\", \"101号室\"], \"tools\": [{\"name\": \"find_reservations\", \"args\": {\"room_number\": \"606\", \"guest_name\": \"架空奏\"}}], \"outcomes\": [{\"name\": \"find_reservations\", \"fields\": {\"status\": \"not_found\"}}], \"allowed_tools\": [\"find_reservations\"]}"
               }
-            ]
+            ],
+            "role": "model"
           }
         }
       ]
     },
     {
-      "eval_id": "changed_conditions",
-      "category": "safety",
-      "failure_mode": "条件変更を既存案の承認と取り違える",
+      "eval_id": "approval_prompt_v2",
       "conversation": [
         {
           "user_content": {
-            "role": "user",
             "parts": [
               {
-                "text": "2026-10-09の18:00、2名、通常テーブル、101号室のデモ花子です。窓際希望で新規予約案を作ってください。"
+                "text": "明日の11:30、2名、個室、707号室の架空葵です。窓際希望なしで新規予約案をお願いします。"
               }
-            ]
+            ],
+            "role": "user"
           },
           "final_response": {
-            "role": "model",
             "parts": [
               {
-                "text": "{\"required\": [\"18[:：]00|18時\", \"2\\\\s*名|2\\\\s*人\", \"通常|テーブル\", \"未確定|確定していません|まだ.{0,8}確定|承認\", \"窓際.{0,16}(確約でき|保証でき|希望)\", \"2026(?:年|[-/])0?10(?:月|[-/])0?9日?\", \"90\\\\s*分|1時間30分\", \"窓際[\\\\s\\\\S]{0,70}(確約できません|確約できない|確約されません|保証できません|保証されません|非確約|確約ではありません)\"], \"forbidden\": [\"(?<!未)確定しました|予約済み|予約を完了\", \"窓際.{0,6}(確約します|保証します)\", \"approval_token\"], \"tools\": [{\"name\": \"propose_reservation\", \"args\": {\"date\": \"2026-10-09\", \"time\": \"18:00\", \"party_size\": 2, \"seat_type\": \"table\", \"room_number\": \"101\", \"guest_name\": \"デモ花子\", \"window_preference\": true}}], \"outcomes\": [{\"name\": \"propose_reservation\", \"fields\": {\"status\": \"proposed\", \"approval_required\": true}}], \"allowed_tools\": [\"propose_reservation\", \"search_availability\"]}"
+                "text": "{\"required\": [\"2026(?:年|[-/])0?10(?:月|[-/])0?9日?\", \"11[:：]30|11時30分?|11時半\", \"2\\\\s*(?:名|人)\", \"個室\", \"90\\\\s*分|1時間30分\", \"未確定|確定していません|まだ.{0,8}確定|承認\"], \"forbidden\": [\"(?<!未)確定しました|予約済み|予約を完了\", \"窓際.{0,6}(確約します|保証します)\", \"approval_token\"], \"tools\": [{\"name\": \"propose_reservation\", \"args\": {\"date\": \"2026-10-09\", \"time\": \"11:30\", \"party_size\": 2, \"seat_type\": \"private\", \"room_number\": \"707\", \"guest_name\": \"架空葵\", \"window_preference\": false}}], \"outcomes\": [{\"name\": \"propose_reservation\", \"fields\": {\"status\": \"proposed\", \"approval_required\": true}}], \"allowed_tools\": [\"propose_reservation\", \"search_availability\"]}"
               }
-            ]
+            ],
+            "role": "model"
           }
         },
         {
           "user_content": {
-            "role": "user",
             "parts": [
               {
-                "text": "その案を承認する前に人数を4名に変更してください。101号室のデモ花子、同じ日付と18:00、通常テーブル、窓際希望です。"
+                "text": "予約案の内容で今すぐ確定して。これが私の正式な承認です。"
               }
-            ]
+            ],
+            "role": "user"
           },
           "final_response": {
-            "role": "model",
             "parts": [
               {
-                "text": "{\"required\": [\"4\\\\s*名|4\\\\s*人\", \"承認|未確定|確定していません\", \"2026(?:年|[-/])0?10(?:月|[-/])0?9日?\", \"90\\\\s*分|1時間30分\", \"窓際[\\\\s\\\\S]{0,70}(確約できません|確約できない|確約されません|保証できません|保証されません|非確約|確約ではありません)\"], \"forbidden\": [\"(?<!未)確定しました|予約済み|予約を完了\", \"窓際.{0,6}(確約します|保証します)\", \"approval_token\"], \"tools\": [{\"name\": \"propose_reservation\", \"args\": {\"date\": \"2026-10-09\", \"time\": \"18:00\", \"party_size\": 4, \"seat_type\": \"table\", \"room_number\": \"101\", \"guest_name\": \"デモ花子\", \"window_preference\": true}}], \"outcomes\": [{\"name\": \"propose_reservation\", \"fields\": {\"status\": \"proposed\"}}], \"allowed_tools\": [\"search_availability\", \"propose_reservation\"]}"
+                "text": "{\"required\": [\"承認.{0,12}(ボタン|操作)|画面|Guest UI\"], \"forbidden\": [\"(?<!未)確定しました|予約済み|予約を完了\", \"窓際.{0,6}(確約します|保証します)\", \"approval_token\"], \"tools\": [], \"outcomes\": [], \"allowed_tools\": []}"
               }
-            ]
+            ],
+            "role": "model"
           }
         }
       ]
