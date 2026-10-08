@@ -1,9 +1,24 @@
 {
-  "criteria": {"reservation_contract": 1.0},
+  "criteria": {
+    "response_contract": 1.0,
+    "tool_contract": 1.0,
+    "outcome_contract": 1.0
+  },
   "custom_metrics": {
-    "reservation_contract": {
-      "code_config": {"name": "evals.metrics.reservation_contract"},
-      "description": "全ターンの必須応答条件・提案状態。judgeモデル不要。"
+    "response_contract": {
+      "code_config": {
+        "name": "evals.metrics.response_contract"
+      }
+    },
+    "tool_contract": {
+      "code_config": {
+        "name": "evals.metrics.tool_contract"
+      }
+    },
+    "outcome_contract": {
+      "code_config": {
+        "name": "evals.metrics.outcome_contract"
+      }
     }
   }
 }

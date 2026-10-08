@@ -147,48 +147,50 @@ Guest UIを開き、上記の順番と架空ゲストで次を確認します。
 
 Front DeskとRestaurantのOllama文脈は8192に指定します。ツール・JSON schema・会話を含む入力の切り捨てを避けるためのローカル実行設定です。モデル品質を保証するものではなく、メモリ使用量は増えます。一次情報: [Ollama Chat API](https://docs.ollama.com/api/chat)、[Context length](https://docs.ollama.com/context-length)。確認日: 2026-10-07。
 
-Restaurantへ相談中の分類結果が形式違反になった場合は、不正出力を承認や操作に解釈せず、公開A2Aの相談としてRestaurantへ不足条件を確認します。相談中でない場合は依頼の再入力を案内します。
+Front Deskの分類結果が形式違反になった場合は、不正出力を承認や操作に解釈せず、依頼の再入力を案内します。Restaurantへの無条件委譲は行いません。
 
-### adk evalによる四シナリオの評価
+### adk evalによるRestaurant Agent単体評価
 
-[ADR 0007](adr/0007-adk-eval-guest-ui.md)に従い、Guest UIのHTTP入口を操作する評価Agentを使います。`evals/restaurant.evalset.json`に発話と構造化承認、二会話の競合を記録し、`evals/eval_config.json`でcustom metric `reservation_contract`を閾値1.0で評価します。外部judgeモデル・認証情報は不要です。Front DeskとRestaurantは`.env.example`の既定モデル`ollama_chat/qwen3.5:latest`を使用します。モデルを変えた場合は結果にモデル名・設定を記録してください。
+UI、HTTPサーバー、A2A接続を起動せず、製品と同じRestaurant相談Agentと業務toolを評価する。評価対象と合否条件は `evals/README.md`、判断の変更はADR 0008を参照。
 
-```sh
+```bash
 uv sync --extra evaluation
-uv run --extra evaluation python -m scripts.eval_restaurant
+uv run --extra evaluation python scripts/eval_restaurant.py --split development
+# 開発用ケースがすべて合格した後、最終確認用を実行する
+uv run --extra evaluation python scripts/eval_restaurant.py --split holdout
+# 特定ケースの動作確認
+uv run --extra evaluation python scripts/eval_restaurant.py --case new_proposal --runs 1
 ```
 
-Ollamaを先に起動してください。評価スクリプトは8800（Guest UI）と8803（Restaurant）をケースごとに起動し、正常終了・例外時に停止します。ポートが使用中の場合は停止せず失敗します。既存デモの8000番台サービスとは別です。ケース間で予約・提案・会話をリセットし、実行開始日のAsia/Tokyo日付を基準として翌日／翌々日に置換します。日付をまたぐ評価は無効で、再起動した新しい評価を別実行として記録してください。
+既存の `.env` とOllamaの接続設定を利用する。開発用10件、最終確認用4件を、それぞれ既定3回評価する。時刻を2026年10月8日09:00（日本時間）に固定し、試行ごとに会話・架空予約・提案状態を初期化する。
 
-特定ケースだけを確認するには`--case full_alternative`等を付けます。再試行は行わず、四ケースすべての結果を残します。失敗時は原因を修正し、以前の失敗結果も保持して再評価します。手動で同じ評価を起動する場合は、初期化済みのRestaurantとGuest UIを8803/8800で起動し、起動日と同じ`EVAL_BASE_DATE`を指定します。
+Restaurantの製品と評価で共通の生成設定は `temperature=0`、`num_ctx=8192`、`max_output_tokens=1200`、`think=false`。構造化toolと正しい業務要約の転記を安定させるための設定で、あらゆる入力の正しさやOllamaの解析エラー防止を保証しない。モデルや依存関係の変更と同様に、設定変更後は検収用の全試行を実行する。
 
-```sh
-PYTHONPATH=. EVAL_BASE_DATE=2026-10-08 EVAL_GUEST_UI_URL=http://127.0.0.1:8800 \
-  uv run --extra evaluation adk eval evals/guest_ui_agent \
-  evals/restaurant.evalset.json:new_reservation \
-  --config_file_path=evals/eval_config.json --print_detailed_results
-```
+応答内容、toolの選択と引数、業務結果の3基準すべてで、全ターン・全試行の合格を要求する。合格率の平均で危険な失敗を相殺しない。接続失敗や評価結果の欠落は `EXECUTION_ERROR` とし、モデル品質の `FAIL` と区別する。実行不能時は後続を `NOT_RUN` として停止する。
 
-手動起動には、別々のターミナルで次のコマンドを使います。終了時はそれぞれCtrl+Cで停止します。評価専用RestaurantのAgent Cardは公開ポート8803と一致します。
+結果は `.adk/restaurant-agent-eval/<日時>/` に保存する。モデル・依存バージョン・固定時刻・設定、ケース別ログ、ADKの評価結果、全試行の集計を記録する。CLIの終了コードだけで合否を判断しない。
 
-```sh
-uv run --extra evaluation uvicorn scripts.eval_restaurant_service:a2a_app --host 127.0.0.1 --port 8803
-RESTAURANT_AGENT_BASE_URL=http://127.0.0.1:8803 uv run --extra evaluation uvicorn hotel_ui.app:app --host 127.0.0.1 --port 8800
-```
+評価データ・採点器・Agent生成処理・業務tool・依存lockのSHA-256も `metadata.json` に記録する。同じ評価の実行中にこれらを変更せず、改善は実行を停止した後に行う。中断された試行は `EXECUTION_ERROR`、後続は `NOT_RUN` として残す。過去の失敗を新しい実行の合格で上書きしない。
 
-日付は例なので実行日に置き換えます。複数ケースを直接CLIで同時に実行せず、上のスクリプトでケースを順次実行してください。ADK CLIは評価失敗でも終了コード0になる場合があるため、スクリプトはJSONレポートのケース合否を確認して失敗なら終了コード1を返します。
+この評価は相談・検索・提案までを対象とする。構造化承認の検証、予約確定、同時確定の競合防止、A2A通信、UI表示はこの単体評価の保証範囲に含まれない。承認・競合の安全性は既存のRestaurant業務テストで補完する。
 
-結果は`.adk/restaurant-eval/<実行時刻>/`の`summary.json`、`*-adk.log`、ADKの`*.evalset_result.json`に保存します。サービスログも同じ場所です。採点は各ターンの必須正規表現、禁止表現、提案の有無、公開A2A Taskの受信を確認し、1ターンでも失敗すればケース全体を0にします。期待値はデータセットの`final_response`にあるJSON条件です。IDや文章全文の完全一致は要求しません。これらは業務上の必須条件の回帰評価であり、自然文の全般的な品質評価ではありません。
+### 受け入れ条件と検証の対応
 
-| 要件 | adk evalケースと合否条件 | 補完検証 |
-| --- | --- | --- |
-| 新規・自然文承認の非確定 | `new_reservation`: 条件を含む未確定提案、自然文ではボタン案内、構造化承認後のみ確定 | `test_restaurant_scenarios`の承認前予約状態・token非露出 |
-| 満席代替 | `full_alternative`: 個室満席・20:00代替、選択条件の提案、承認後確定 | 営業枠・席種・定員の業務テスト |
-| 既存予約の変更 | `change_reservation`: 複数予約の照合、対象IDの明示、20:30への提案・確定・再照合 | 変更前後の予約状態テスト |
-| 競合後の再提案 | `conflict_reproposal`: 二会話の提案、先行確定、競合、元予約再照合、別枠再提案・再承認 | 原子性・元予約維持・同時確定テスト |
-| 誤照合・別会話・拒否・再送・期限・古い版 | 四ケースの会話評価だけで合格にしない | `test_restaurant_confirmation`、`test_restaurant_proposals`、`test_restaurant_guest_flow`、`test_restaurant_scenarios` |
-| 営業・定員・日付境界 | 四ケースの会話評価だけで合格にしない | `test_restaurant_domain`、`test_restaurant_availability` |
-| 既存MVP・部分失敗 | 四ケースの会話評価の対象外 | `scripts.e2e_demo`、`test_front_desk_failures` |
-| 実画面・公開A2A境界 | HTTP結果と画面を区別 | 上記画面確認、`test_a2a_contracts`、デバッグ表示 |
+Agent単体評価を用いる変更は、2026-10-08のユーザー指示を優先する。GitHub Issue #57に残る旧UI/A2A評価方式は、単体評価の保証範囲を表すものではない。以下の補完検証の範囲を明示し、実行済みの根拠なしにStory/Epicの完了条件を満たしたと判断しない。
 
-PRには各ケースの合否、基準日、モデル・依存・設定、実行コマンド、結果保存先、補完検証の結果、未実行項目と理由を記載します。四ケース合格だけで原子性や画面操作まで保証しません。
+| 条件 | Agent評価ケース | 補完検証と合否条件 |
+|---|---|---|
+| 新規予約 | `new_proposal`、`paraphrased_new` | `test_restaurant_scenarios.ScenarioTests.test_new_booking_is_only_saved_after_bound_approval`: 承認前は非更新、承認後のみ保存 |
+| 個室満席の代替 | `full_alternative` | `test_full_private_room_offers_and_confirms_same_seat_alternative`: 同じ席種の候補を選び確定 |
+| 既存予約の選択・変更 | `select_change` | `test_explicit_selection_changes_only_dinner`: 選択した予約だけ変更 |
+| 承認時競合と再提案 | 単体会話評価の対象外 | `test_approval_conflict_preserves_original_and_can_repropose`: 元予約を維持し、別候補の新提案を確定できる |
+| 未承認更新なし | `natural_approval`、`injected_confirmation` | `test_restaurant_confirmation.ConfirmationTests`、`test_restaurant_guest_flow.StructuredDecisionTests`: 構造化操作の境界を検証 |
+| 二重予約・再送・古い提案 | 単体会話評価の対象外 | `ConfirmationTests`: 同時確定の一方だけ成功、再送は同一結果、古い版は非更新 |
+| 誤照合・情報不足 | `wrong_identity`、`missing_conditions`、`missing_owner` | `test_restaurant_proposals.ProposalTests`: 誤照合時の候補非露出、複数予約の明示選択 |
+| 拒否・期限・別会話 | 単体会話評価の対象外 | `ProposalTests`と`ConfirmationTests`: 拒否・期限切れ・別会話では非更新 |
+| 営業・定員・日付境界、条件緩和 | `last_start`、`private_party_one`、`ambiguous_date`、`no_relaxation` | `test_restaurant_domain.DomainTests`と`test_restaurant_availability.AvailabilityTests`: 不正条件の拒否、許可前の条件維持 |
+| 既存MVP・部分失敗 | 単体Restaurant評価の対象外 | `test_restaurant_agent`、`test_front_desk_routing`、`test_front_desk_approval`、`test_front_desk_failures`: 既存動作と他部署結果の維持 |
+| 公開A2A境界 | 単体Restaurant評価の対象外 | `test_restaurant_tools.ToolTests.test_version_two_proposal_over_public_a2a`と`test_a2a_contracts`: 公開契約の応答を確認 |
+| 実画面での四シナリオ | 対象外 | 上記画面手順は既存の任意手順として保持。今回の指示に従いUIは起動せず、画面確認済みとは扱わない |
+
+単体評価の各ケースは `evals/README.md` の3基準すべてを満たすこと。業務テストでの合格は実モデル・実画面の合格を意味しない。
